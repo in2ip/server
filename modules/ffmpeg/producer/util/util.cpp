@@ -179,6 +179,11 @@ core::mutable_frame make_frame(const void* tag, const spl::shared_ptr<AVFrame>& 
 		auto target_desc = pixel_format_desc(target_pix_fmt, width, height);
 
 		auto write = frame_factory.create_frame(tag, target_desc, channel_layout);
+		struct AVFrameSideData *atsc_a53_cc = av_frame_get_side_data((const AVFrame *)decoded_frame.get(), AV_FRAME_DATA_A53_CC);
+		if (atsc_a53_cc != NULL)
+		{
+			write.atsc_a53_cc().insert(write.atsc_a53_cc().begin(), atsc_a53_cc->data, (atsc_a53_cc->data+atsc_a53_cc->size));
+		}
 
 		std::shared_ptr<SwsContext> sws_context;
 
@@ -228,6 +233,11 @@ core::mutable_frame make_frame(const void* tag, const spl::shared_ptr<AVFrame>& 
 	else
 	{
 		auto write = frame_factory.create_frame(tag, desc, channel_layout);
+		struct AVFrameSideData *atsc_a53_cc = av_frame_get_side_data((const AVFrame *)decoded_frame.get(), AV_FRAME_DATA_A53_CC);
+		if (atsc_a53_cc != NULL)
+		{
+			write.atsc_a53_cc().insert(write.atsc_a53_cc().begin(), atsc_a53_cc->data, (atsc_a53_cc->data+atsc_a53_cc->size));
+		}
 
 		for(int n = 0; n < static_cast<int>(desc.planes.size()); ++n)
 		{

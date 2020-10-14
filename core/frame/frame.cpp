@@ -50,7 +50,7 @@ struct mutable_frame::impl : boost::noncopyable
 	const void*									tag_;
 	core::frame_geometry						geometry_				= frame_geometry::get_default();
 	caspar::timer								since_created_timer_;
-
+	std::vector<std::uint8_t>					atsc_a53_cc_;
 	impl(
 			std::vector<array<std::uint8_t>> buffers,
 			mutable_audio_buffer audio_data,
@@ -89,6 +89,7 @@ const core::audio_channel_layout& mutable_frame::audio_channel_layout() const { 
 const array<std::uint8_t>& mutable_frame::image_data(std::size_t index) const{return impl_->buffers_.at(index);}
 const core::mutable_audio_buffer& mutable_frame::audio_data() const{return impl_->audio_data_;}
 array<std::uint8_t>& mutable_frame::image_data(std::size_t index){return impl_->buffers_.at(index);}
+std::vector<std::uint8_t>& mutable_frame::atsc_a53_cc(){return impl_->atsc_a53_cc_; }
 core::mutable_audio_buffer& mutable_frame::audio_data(){return impl_->audio_data_;}
 std::size_t mutable_frame::width() const{return impl_->desc_.planes.at(0).width;}
 std::size_t mutable_frame::height() const{return impl_->desc_.planes.at(0).height;}
