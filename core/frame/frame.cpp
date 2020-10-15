@@ -117,6 +117,7 @@ struct const_frame::impl : boost::noncopyable
 	bool																should_record_age_;
 	mutable std::atomic<int64_t>										recorded_age_;
 	std::shared_future<array<const std::uint8_t>>						key_only_on_demand_;
+	std::vector<std::uint8_t>											atsc_a53_cc_;
 
 	impl(const void* tag)
 		: audio_data_(0, 0, true, 0)
@@ -139,6 +140,7 @@ struct const_frame::impl : boost::noncopyable
 		, since_created_timer_(other.since_created_timer_)
 		, should_record_age_(other.should_record_age_)
 		, key_only_on_demand_(other.key_only_on_demand_)
+		, atsc_a53_cc_(other.atsc_a53_cc_)
 	{
 		recorded_age_ = other.recorded_age_.load();
 	}
@@ -182,6 +184,7 @@ struct const_frame::impl : boost::noncopyable
 		, geometry_(other.geometry())
 		, since_created_timer_(other.since_created())
 		, should_record_age_(true)
+		, atsc_a53_cc_(other.atsc_a53_cc())
 	{
 		spl::shared_ptr<mutable_audio_buffer> shared_audio_data(new mutable_audio_buffer(std::move(other.audio_data())));
 		// pointer returned by vector::data() should be the same after move, but just to be safe.
@@ -265,6 +268,7 @@ const core::pixel_format_desc& const_frame::pixel_format_desc()const{return impl
 const core::audio_channel_layout& const_frame::audio_channel_layout()const { return impl_->channel_layout_; }
 array<const std::uint8_t> const_frame::image_data(int index)const{return impl_->image_data(index);}
 const core::audio_buffer& const_frame::audio_data()const{return impl_->audio_data_;}
+const std::vector<std::uint8_t>& const_frame::atsc_a53_cc()const{return impl_->atsc_a53_cc_;}
 std::size_t const_frame::width()const{return impl_->width();}
 std::size_t const_frame::height()const{return impl_->height();}
 std::size_t const_frame::size()const{return impl_->size();}

@@ -104,6 +104,7 @@ public:
 
 	array<const std::uint8_t> image_data(int index = 0) const;
 	const core::audio_buffer& audio_data() const;
+	const std::vector<std::uint8_t>& atsc_a53_cc() const;
 
 	std::size_t width() const;
 	std::size_t height() const;
