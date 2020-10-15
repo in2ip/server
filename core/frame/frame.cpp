@@ -148,6 +148,7 @@ struct const_frame::impl : boost::noncopyable
 	impl(
 			std::shared_future<array<const std::uint8_t>> image,
 			audio_buffer audio_data,
+			std::vector<uint8_t> atsc_a53_cc,
 			const void* tag,
 			const core::pixel_format_desc& desc,
 			const core::audio_channel_layout& channel_layout,
@@ -159,6 +160,7 @@ struct const_frame::impl : boost::noncopyable
 		, geometry_(frame_geometry::get_default())
 		, since_created_timer_(std::move(since_created_timer))
 		, should_record_age_(false)
+		, atsc_a53_cc_(atsc_a53_cc)
 	{
 		if (desc.format != core::pixel_format::bgra)
 			CASPAR_THROW_EXCEPTION(not_implemented());
@@ -241,10 +243,11 @@ const_frame::const_frame(const void* tag) : impl_(new impl(tag)){}
 const_frame::const_frame(
 		std::shared_future<array<const std::uint8_t>> image,
 		audio_buffer audio_data,
+		std::vector<uint8_t> atsc_a53_cc,
 		const void* tag,
 		const core::pixel_format_desc& desc,
 		const core::audio_channel_layout& channel_layout)
-	: impl_(new impl(std::move(image), std::move(audio_data), tag, desc, channel_layout)){}
+	: impl_(new impl(std::move(image), std::move(audio_data), std::move(atsc_a53_cc), tag, desc, channel_layout)){}
 const_frame::const_frame(mutable_frame&& other) : impl_(new impl(std::move(other))){}
 const_frame::~const_frame(){}
 const_frame::const_frame(const_frame&& other) : impl_(std::move(other.impl_)){}

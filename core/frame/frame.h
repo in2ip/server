@@ -81,6 +81,7 @@ public:
 	explicit const_frame(const void* tag = nullptr);
 	explicit const_frame(std::shared_future<array<const std::uint8_t>> image,
 						audio_buffer audio_data,
+						std::vector<uint8_t> atsc_a53_cc,
 						const void* tag,
 						const pixel_format_desc& desc,
 						const audio_channel_layout& channel_layout);
