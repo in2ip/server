@@ -62,6 +62,7 @@ public:
 	void swap(draw_frame& other);	
 	
 	void accept(frame_visitor& visitor) const;
+	const std::vector<std::uint8_t> atsc_a53_cc() const;
 	
 	int64_t get_and_record_age_millis();
 	
