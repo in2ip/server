@@ -86,7 +86,7 @@ public:
 	const std::vector<std::uint8_t> atsc_a53_cc()const
 	{ 
 		if (frame_)
-			return frame_.atsc_a53_cc();
+			return frame_->atsc_a53_cc();
 		else
 		{
 			for (auto& frame : frames_)
@@ -139,7 +139,7 @@ void draw_frame::swap(draw_frame& other){impl_.swap(other.impl_);}
 const core::frame_transform& draw_frame::transform() const { return impl_->frame_transform_;}
 core::frame_transform& draw_frame::transform() { return impl_->frame_transform_;}
 void draw_frame::accept(frame_visitor& visitor) const{impl_->accept(visitor);}
-const std::vector<std::uint8_t> draw_frame::atsc_a53_cc()const {return _impl_->atsc_a53_cc();}
+const std::vector<std::uint8_t> draw_frame::atsc_a53_cc()const {return impl_->atsc_a53_cc();}
 int64_t draw_frame::get_and_record_age_millis() { return impl_->get_and_record_age_millis(*this); }
 bool draw_frame::operator==(const draw_frame& other)const{return *impl_ == *other.impl_;}
 bool draw_frame::operator!=(const draw_frame& other)const{return !(*this == other);}

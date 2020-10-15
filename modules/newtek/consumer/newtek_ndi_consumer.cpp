@@ -314,6 +314,9 @@ struct newtek_ndi_consumer : public boost::noncopyable
         //sws_scale(sws_.get(), src_data, src_linesize, 0, format_desc_.height, dest_data, dst_linesize);
         //ndi_video_frame_.p_data = &send_frame_buffer_.front();
 
+        size_t a53_size = frame.atsc_a53_cc().size();
+        if (a53_size > 0)
+            CASPAR_LOG(warning) << "NDI a53 size: "<< a53_size;
         core::audio_buffer a_data = frame.audio_data();
         uint8_t* v_data = const_cast<uint8_t*>(frame.image_data().begin());
         if (frame.image_data().empty()) {

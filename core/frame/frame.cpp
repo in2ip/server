@@ -207,7 +207,7 @@ struct const_frame::impl : boost::noncopyable
 
 	spl::shared_ptr<impl> key_only() const
 	{
-		return spl::make_shared<impl>(key_only_on_demand_, audio_data_, tag_, desc_, channel_layout_, since_created_timer_);
+		return spl::make_shared<impl>(key_only_on_demand_, audio_data_, atsc_a53_cc_, tag_, desc_, channel_layout_, since_created_timer_);
 	}
 
 	std::size_t width() const
