@@ -49,6 +49,7 @@
 #include "../util/ndi.h"
 extern "C"
 {
+            #include "base64.h"
 	        #include <libswscale/swscale.h>
 	        #include <libavcodec/avcodec.h>
 	        #include <libavformat/avformat.h>
@@ -314,9 +315,6 @@ struct newtek_ndi_consumer : public boost::noncopyable
         //sws_scale(sws_.get(), src_data, src_linesize, 0, format_desc_.height, dest_data, dst_linesize);
         //ndi_video_frame_.p_data = &send_frame_buffer_.front();
 
-        size_t a53_size = frame.atsc_a53_cc().size();
-        if (a53_size > 0)
-            CASPAR_LOG(warning) << "NDI a53 size: "<< a53_size;
         core::audio_buffer a_data = frame.audio_data();
         uint8_t* v_data = const_cast<uint8_t*>(frame.image_data().begin());
         if (frame.image_data().empty()) {
@@ -329,6 +327,18 @@ struct newtek_ndi_consumer : public boost::noncopyable
             a_data = core::audio_buffer(buf->data(), buf->size(), true, std::move(buf));
         }
 
+        size_t a53_size = frame.atsc_a53_cc().size();
+        char *base64_a53_cc = NULL;
+        char *metadata_buffer = NULL;
+        if (a53_size > 0)
+        {
+            base64_a53_cc = (char*)malloc(Base64encode_len(a53_size));
+            Base64encode(base64_a53_cc, frame.atsc_a53_cc().begin(), a53_size);
+            metadata_buffer = (char*)malloc(sizeof("<C708 line=\"10\">" + sizeof("</CEA708>\n") + 1 + strlen(base64_a53_cc)));
+            std:sprintf(metadata_buffer, "<C708 line=\"10\">%s</CEA708>\n", base64_a53_cc);
+            ndi_video_frame_.p_metadata = metadata_buffer;
+        }
+
         ndi_video_frame_.p_data = v_data;
         ndi_lib_->NDIlib_send_send_video_v2(*ndi_send_instance_, &ndi_video_frame_);
         auto audio_buffer = channel_remapper_->mix_and_rearrange(a_data);
@@ -338,6 +348,7 @@ struct newtek_ndi_consumer : public boost::noncopyable
         current_encoding_delay_ = frame.get_age_millis();
         timebase_frame_no_++;
         graph_->set_value("ndi-consume-time", ndi_consume_timer_.elapsed() * format_desc_.fps * 0.5);
+        free(metadata_buffer);
         return true;
     }
 
