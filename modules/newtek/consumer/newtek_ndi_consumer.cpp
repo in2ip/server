@@ -41,6 +41,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/crc.hpp>
 
@@ -330,12 +331,17 @@ struct newtek_ndi_consumer : public boost::noncopyable
         size_t a53_size = frame.atsc_a53_cc().size();
         char *base64_a53_cc = NULL;
         char *metadata_buffer = NULL;
+        std::string metadata;
+        boost::property_tree::ptree metadata_tree;
         if (a53_size > 0)
         {
             base64_a53_cc = (char*)calloc(Base64encode_len(a53_size) +1, 1);
             Base64encode(base64_a53_cc,(const char *)frame.atsc_a53_cc().data(), a53_size);
-            ndi_video_frame_.p_metadata = base64_a53_cc;
+            metadata_tree.put(L"CEA708-A53", base64_a53_cc);
+            free(base64_a53_cc);
         }
+        write_xml(metadata, metadata_tree);
+        ndi_video_frame.p_metadata = metadata.c_str();
 
         ndi_video_frame_.p_data = v_data;
         ndi_lib_->NDIlib_send_send_video_v2(*ndi_send_instance_, &ndi_video_frame_);
