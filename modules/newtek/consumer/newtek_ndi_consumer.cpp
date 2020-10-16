@@ -332,11 +332,9 @@ struct newtek_ndi_consumer : public boost::noncopyable
         char *metadata_buffer = NULL;
         if (a53_size > 0)
         {
-            base64_a53_cc = (char*)malloc(Base64encode_len(a53_size));
-            Base64encode(base64_a53_cc, frame.atsc_a53_cc().begin(), a53_size);
-            metadata_buffer = (char*)malloc(sizeof("<C708 line=\"10\">" + sizeof("</CEA708>\n") + 1 + strlen(base64_a53_cc)));
-            std:sprintf(metadata_buffer, "<C708 line=\"10\">%s</CEA708>\n", base64_a53_cc);
-            ndi_video_frame_.p_metadata = metadata_buffer;
+            base64_a53_cc = (char*)calloc(Base64encode_len(a53_size) +1, 1);
+            Base64encode(base64_a53_cc,(const char *)frame.atsc_a53_cc().data(), a53_size);
+            ndi_video_frame_.p_metadata = base64_a53_cc;
         }
 
         ndi_video_frame_.p_data = v_data;
@@ -348,7 +346,7 @@ struct newtek_ndi_consumer : public boost::noncopyable
         current_encoding_delay_ = frame.get_age_millis();
         timebase_frame_no_++;
         graph_->set_value("ndi-consume-time", ndi_consume_timer_.elapsed() * format_desc_.fps * 0.5);
-        free(metadata_buffer);
+        free(base64_a53_cc);
         return true;
     }
 
