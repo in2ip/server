@@ -330,18 +330,24 @@ struct newtek_ndi_consumer : public boost::noncopyable
 
         size_t a53_size = frame.atsc_a53_cc().size();
         char *base64_a53_cc = NULL;
-        char *metadata_buffer = NULL;
-        std::string metadata;
+        bool write_meta = false;
+        std::stringstream metadata;
         boost::property_tree::ptree metadata_tree;
         if (a53_size > 0)
         {
             base64_a53_cc = (char*)calloc(Base64encode_len(a53_size) +1, 1);
             Base64encode(base64_a53_cc,(const char *)frame.atsc_a53_cc().data(), a53_size);
-            metadata_tree.put(L"CEA708-A53", base64_a53_cc);
+            metadata_tree.put("CEA708-A53", base64_a53_cc);
             free(base64_a53_cc);
+            write_meta = true;
         }
-        write_xml(metadata, metadata_tree);
-        ndi_video_frame.p_metadata = metadata.c_str();
+
+        if (write_meta)
+            write_xml(metadata, metadata_tree);
+
+        char *test = (char *)calloc(metadata.str().size() +1, 1);
+        memcpy(test, metadata.str().c_str(), metadata.str().size());
+        ndi_video_frame_.p_metadata = test;
 
         ndi_video_frame_.p_data = v_data;
         ndi_lib_->NDIlib_send_send_video_v2(*ndi_send_instance_, &ndi_video_frame_);
@@ -352,7 +358,7 @@ struct newtek_ndi_consumer : public boost::noncopyable
         current_encoding_delay_ = frame.get_age_millis();
         timebase_frame_no_++;
         graph_->set_value("ndi-consume-time", ndi_consume_timer_.elapsed() * format_desc_.fps * 0.5);
-        free(base64_a53_cc);
+        free(test);
         return true;
     }
 
