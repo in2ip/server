@@ -98,6 +98,21 @@ public:
 		}
 	}
 
+	const std::vector<std::pair<int, std::shared_ptr<AVSubtitle>>> subtitles()const
+	{
+		if (frame_)
+			return frame_->subtitles();
+		else
+		{
+			for (auto& frame : frames_)
+			{
+				if (frame.subtitles().size() > 0)
+					return frame.subtitles();
+			}
+			return frames_.front().subtitles();
+		}
+	}
+
 	bool operator==(const impl& other)
 	{
 		return	frames_				== other.frames_ &&
@@ -140,6 +155,7 @@ const core::frame_transform& draw_frame::transform() const { return impl_->frame
 core::frame_transform& draw_frame::transform() { return impl_->frame_transform_;}
 void draw_frame::accept(frame_visitor& visitor) const{impl_->accept(visitor);}
 const std::vector<std::uint8_t> draw_frame::atsc_a53_cc()const {return impl_->atsc_a53_cc();}
+const std::vector<std::pair<int, std::shared_ptr<AVSubtitle>>> draw_frame::subtitles()const { return impl_->subtitles(); }
 int64_t draw_frame::get_and_record_age_millis() { return impl_->get_and_record_age_millis(*this); }
 bool draw_frame::operator==(const draw_frame& other)const{return *impl_ == *other.impl_;}
 bool draw_frame::operator!=(const draw_frame& other)const{return !(*this == other);}

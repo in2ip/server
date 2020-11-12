@@ -63,6 +63,7 @@ extern "C"
 #include <deque>
 #include <queue>
 #include <vector>
+#include <tuple>
 
 using namespace caspar::core;
 
@@ -132,6 +133,7 @@ struct frame_muxer::impl : boost::noncopyable
 	std::queue<std::queue<core::mutable_frame>>		video_streams_;
 	std::queue<core::mutable_audio_buffer>			audio_streams_;
 	std::queue<core::draw_frame>					frame_buffer_;
+	std::queue<std::tuple<int64_t, int, std::shared_ptr<AVSubtitle>>> subtitle_buffer_;
 	display_mode									display_mode_				= display_mode::invalid;
 	const boost::rational<int>						in_framerate_;
 	const video_format_desc							format_desc_;
@@ -269,6 +271,11 @@ struct frame_muxer::impl : boost::noncopyable
 			CASPAR_THROW_EXCEPTION(invalid_operation() << source_info("frame_muxer") << msg_info("audio-stream overflow. This can be caused by incorrect frame-rate. Check clip meta-data."));
 	}
 
+	void push(const std::tuple<int64_t, int, std::shared_ptr<AVSubtitle>> subtitle)
+	{
+		subtitle_buffer_.push(subtitle);
+	}
+
 	bool video_ready() const
 	{
 		return video_streams_.size() > 1 || (video_streams_.size() >= audio_streams_.size() && video_ready2());
@@ -312,6 +319,17 @@ struct frame_muxer::impl : boost::noncopyable
 
 		auto frame			= pop_video();
 		frame.audio_data()	= pop_audio();
+
+		int64_t pts;
+		int index;
+		std::shared_ptr<AVSubtitle> sub;
+		std::tie(pts, index, sub) = subtitle_buffer_.front();
+		while (pts <= frame.pts())
+		{
+			frame.subtitles().push_back(std::make_pair(index, sub));
+			subtitle_buffer_.pop();
+			std::tie(pts, index, sub) = subtitle_buffer_.front();
+		}
 
 		frame_buffer_.push(core::draw_frame(std::move(frame)));
 
@@ -482,6 +500,7 @@ frame_muxer::frame_muxer(
 	: impl_(new impl(std::move(in_framerate), std::move(audio_input_pads), frame_factory, format_desc, channel_layout, filter, multithreaded_filter, force_deinterlacing)){}
 void frame_muxer::push(const std::shared_ptr<AVFrame>& video){impl_->push(video);}
 void frame_muxer::push(const std::vector<std::shared_ptr<core::mutable_audio_buffer>>& audio_samples_per_stream){impl_->push(audio_samples_per_stream);}
+void frame_muxer::push(const std::tuple<int64_t, int, std::shared_ptr<AVSubtitle>>& subtitle){impl_->push(subtitle); }
 core::draw_frame frame_muxer::poll(){return impl_->poll();}
 uint32_t frame_muxer::calc_nb_frames(uint32_t nb_frames) const {return impl_->calc_nb_frames(nb_frames);}
 bool frame_muxer::video_ready() const{return impl_->video_ready();}

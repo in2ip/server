@@ -24,6 +24,7 @@
 #include "frame_visitor.h"
 #include "../fwd.h"
 
+#include "frame.h"
 #include <common/memory.h>
 
 #include <vector>
@@ -63,7 +64,7 @@ public:
 	
 	void accept(frame_visitor& visitor) const;
 	const std::vector<std::uint8_t> atsc_a53_cc() const;
-	
+	const std::vector<std::pair<int, std::shared_ptr<AVSubtitle>>> subtitles() const;
 	int64_t get_and_record_age_millis();
 	
 	bool operator==(const draw_frame& other) const;

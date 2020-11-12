@@ -23,8 +23,6 @@
 
 #include <common/memory.h>
 
-#include <core/frame/frame.h>
-
 #include <boost/noncopyable.hpp>
 
 #include <cstdint>

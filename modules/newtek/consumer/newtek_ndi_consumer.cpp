@@ -341,6 +341,62 @@ struct newtek_ndi_consumer : public boost::noncopyable
             free(base64_a53_cc);
             write_meta = true;
         }
+        bool subs = false;
+        boost::property_tree::ptree bitmap_subs;
+        if (frame.subtitles().size() > 0)
+        {
+            for (auto& subtitle : frame.subtitles())
+            {
+                int index = subtitle.first;
+                struct AVSubtitle *avsubtitle = subtitle.second.get();
+                boost::property_tree::ptree subtitle_tree;
+                subtitle_tree.put("stream_index", index);
+                subtitle_tree.put("duration_ms", (avsubtitle->end_display_time - avsubtitle->end_display_time));
+                write_meta = true;
+                for (int i = 0; i < avsubtitle->num_rects; i++)
+                {
+                    struct AVSubtitleRect *rect = avsubtitle->rects[i];
+                    boost::property_tree::ptree rect_tree;
+                    rect_tree.put("x", rect->x);
+                    rect_tree.put("y", rect->y);
+                    rect_tree.put("w", rect->w);
+                    rect_tree.put("h", rect->h);
+                    rect_tree.put("nb_colors", rect->nb_colors);
+                    if (rect->type != SUBTITLE_BITMAP)
+                    {
+                        write_meta = false;
+                        break;
+                    }
+                    rect_tree.put("linesize_0", rect->linesize[0]);
+                    char *base64_data_0 = (char *)calloc(Base64encode_len(rect->linesize[0] +1), 1);
+                    Base64encode(base64_data_0, (const char*)rect->data[0], rect->linesize[0]);
+                    rect_tree.put("data_0", base64_data_0);
+                    free(base64_data_0);
+                    rect_tree.put("linesize_1", rect->linesize[1]);
+                    char *base64_data_1 = (char *)calloc(Base64encode_len(rect->linesize[1] +1), 1);
+                    Base64encode(base64_data_1, (const char*)rect->data[1], rect->linesize[1]);
+                    rect_tree.put("data_1", base64_data_1);
+                    free(base64_data_1);
+                    rect_tree.put("linesize_2", rect->linesize[2]);
+                    char *base64_data_2 = (char *)calloc(Base64encode_len(rect->linesize[2] +1), 1);
+                    Base64encode(base64_data_2, (const char*)rect->data[2], rect->linesize[2]);
+                    rect_tree.put("data_2", base64_data_2);
+                    free(base64_data_2);
+                    rect_tree.put("linesize_3", rect->linesize[3]);
+                    char *base64_data_3 = (char *)calloc(Base64encode_len(rect->linesize[3] +1), 1);
+                    Base64encode(base64_data_3, (const char*)rect->data[3], rect->linesize[3]);
+                    rect_tree.put("data_3", base64_data_3);
+                    free(base64_data_3);
+                    subtitle_tree.push_back(std::make_pair("", rect_tree));
+                }
+                if (!write_meta)
+                    break;
+                subs = true;
+                bitmap_subs.push_back(std::make_pair("", subtitle_tree));
+            }
+        }
+        if (subs)
+            metadata_tree.add_child("bitmap_subs", bitmap_subs);
 
         if (write_meta)
             write_xml(metadata, metadata_tree);

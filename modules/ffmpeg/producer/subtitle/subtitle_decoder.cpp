@@ -26,11 +26,6 @@
 #include "../util/util.h"
 #include "../../ffmpeg_error.h"
 
-#include <core/video_format.h>
-#include <core/mixer/audio/audio_util.h>
-
-#include <common/cache_aligned_vector.h>
-
 #include <queue>
 #include <tuple>
 #include <cstdint>

@@ -93,6 +93,7 @@ public:
 						/ static_cast<double>(format_desc.square_height));
 
 				std::vector<uint8_t> atsc_a53_cc;
+				std::vector<std::pair<int, std::shared_ptr<AVSubtitle>>> subtitles;
 				for (auto& frame : frames)
 				{
 					frame.second.accept(audio_mixer_);
@@ -100,6 +101,8 @@ public:
 					frame.second.accept(*image_mixer_);
 					if (atsc_a53_cc.size() == 0)
 						atsc_a53_cc = frame.second.atsc_a53_cc();
+					if (subtitles.size() == 0)
+						subtitles = frame.second.subtitles();
 				}
 
 				auto image = (*image_mixer_)(format_desc, straighten_alpha_);
@@ -107,7 +110,7 @@ public:
 
 				auto desc = core::pixel_format_desc(core::pixel_format::bgra);
 				desc.planes.push_back(core::pixel_format_desc::plane(format_desc.width, format_desc.height, 4));
-				return const_frame(std::move(image), std::move(audio), std::move(atsc_a53_cc), this, desc, channel_layout);
+				return const_frame(std::move(image), std::move(audio), std::move(atsc_a53_cc),std::move(subtitles), this, desc, channel_layout);
 			}
 			catch(...)
 			{

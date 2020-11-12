@@ -47,10 +47,12 @@ struct mutable_frame::impl : boost::noncopyable
 	core::mutable_audio_buffer					audio_data_;
 	const core::pixel_format_desc				desc_;
 	const core::audio_channel_layout			channel_layout_;
+	int64_t										pts_;
 	const void*									tag_;
 	core::frame_geometry						geometry_				= frame_geometry::get_default();
 	caspar::timer								since_created_timer_;
 	std::vector<std::uint8_t>					atsc_a53_cc_;
+	std::vector<std::pair<int, std::shared_ptr<AVSubtitle>>> subtitles;
 	impl(
 			std::vector<array<std::uint8_t>> buffers,
 			mutable_audio_buffer audio_data,
@@ -62,11 +64,13 @@ struct mutable_frame::impl : boost::noncopyable
 		, desc_(desc)
 		, channel_layout_(channel_layout)
 		, tag_(tag)
+		, pts_(0)
 	{
 		for (auto& buffer : buffers_)
 			if(!buffer.data())
 				CASPAR_THROW_EXCEPTION(invalid_argument() << msg_info("mutable_frame: null argument"));
 	}
+	void set_pts(int64_t pts) { pts_ = pts; }
 };
 
 mutable_frame::mutable_frame(
@@ -84,12 +88,15 @@ mutable_frame& mutable_frame::operator=(mutable_frame&& other)
 	return *this;
 }
 void mutable_frame::swap(mutable_frame& other){impl_.swap(other.impl_);}
+const int64_t mutable_frame::pts() const{ return impl_->pts_; }
+void mutable_frame::set_pts(int64_t pts) { return impl_->set_pts(pts); }
 const core::pixel_format_desc& mutable_frame::pixel_format_desc() const{return impl_->desc_;}
 const core::audio_channel_layout& mutable_frame::audio_channel_layout() const { return impl_->channel_layout_; }
 const array<std::uint8_t>& mutable_frame::image_data(std::size_t index) const{return impl_->buffers_.at(index);}
 const core::mutable_audio_buffer& mutable_frame::audio_data() const{return impl_->audio_data_;}
 array<std::uint8_t>& mutable_frame::image_data(std::size_t index){return impl_->buffers_.at(index);}
 std::vector<std::uint8_t>& mutable_frame::atsc_a53_cc(){return impl_->atsc_a53_cc_; }
+std::vector<std::pair<int, std::shared_ptr<AVSubtitle>>> mutable_frame::subtitles() { return impl_->subtitles; }
 core::mutable_audio_buffer& mutable_frame::audio_data(){return impl_->audio_data_;}
 std::size_t mutable_frame::width() const{return impl_->desc_.planes.at(0).width;}
 std::size_t mutable_frame::height() const{return impl_->desc_.planes.at(0).height;}
@@ -118,6 +125,7 @@ struct const_frame::impl : boost::noncopyable
 	mutable std::atomic<int64_t>										recorded_age_;
 	std::shared_future<array<const std::uint8_t>>						key_only_on_demand_;
 	std::vector<std::uint8_t>											atsc_a53_cc_;
+	std::vector<std::pair<int, std::shared_ptr<AVSubtitle>>> 			subtitles_;
 
 	impl(const void* tag)
 		: audio_data_(0, 0, true, 0)
@@ -141,6 +149,7 @@ struct const_frame::impl : boost::noncopyable
 		, should_record_age_(other.should_record_age_)
 		, key_only_on_demand_(other.key_only_on_demand_)
 		, atsc_a53_cc_(other.atsc_a53_cc_)
+		, subtitles_(other.subtitles_)
 	{
 		recorded_age_ = other.recorded_age_.load();
 	}
@@ -149,6 +158,7 @@ struct const_frame::impl : boost::noncopyable
 			std::shared_future<array<const std::uint8_t>> image,
 			audio_buffer audio_data,
 			std::vector<uint8_t> atsc_a53_cc,
+			std::vector<std::pair<int, std::shared_ptr<AVSubtitle>>> subtitles,
 			const void* tag,
 			const core::pixel_format_desc& desc,
 			const core::audio_channel_layout& channel_layout,
@@ -161,6 +171,7 @@ struct const_frame::impl : boost::noncopyable
 		, since_created_timer_(std::move(since_created_timer))
 		, should_record_age_(false)
 		, atsc_a53_cc_(atsc_a53_cc)
+		, subtitles_(subtitles)
 	{
 		if (desc.format != core::pixel_format::bgra)
 			CASPAR_THROW_EXCEPTION(not_implemented());
@@ -187,6 +198,7 @@ struct const_frame::impl : boost::noncopyable
 		, since_created_timer_(other.since_created())
 		, should_record_age_(true)
 		, atsc_a53_cc_(other.atsc_a53_cc())
+		, subtitles_(other.subtitles())
 	{
 		spl::shared_ptr<mutable_audio_buffer> shared_audio_data(new mutable_audio_buffer(std::move(other.audio_data())));
 		// pointer returned by vector::data() should be the same after move, but just to be safe.
@@ -207,7 +219,7 @@ struct const_frame::impl : boost::noncopyable
 
 	spl::shared_ptr<impl> key_only() const
 	{
-		return spl::make_shared<impl>(key_only_on_demand_, audio_data_, atsc_a53_cc_, tag_, desc_, channel_layout_, since_created_timer_);
+		return spl::make_shared<impl>(key_only_on_demand_, audio_data_, atsc_a53_cc_, subtitles_, tag_, desc_, channel_layout_, since_created_timer_);
 	}
 
 	std::size_t width() const
@@ -244,10 +256,11 @@ const_frame::const_frame(
 		std::shared_future<array<const std::uint8_t>> image,
 		audio_buffer audio_data,
 		std::vector<uint8_t> atsc_a53_cc,
+		std::vector<std::pair<int, std::shared_ptr<AVSubtitle>>> subtitles,
 		const void* tag,
 		const core::pixel_format_desc& desc,
 		const core::audio_channel_layout& channel_layout)
-	: impl_(new impl(std::move(image), std::move(audio_data), std::move(atsc_a53_cc), tag, desc, channel_layout)){}
+	: impl_(new impl(std::move(image), std::move(audio_data), std::move(atsc_a53_cc), std::move(subtitles), tag, desc, channel_layout)){}
 const_frame::const_frame(mutable_frame&& other) : impl_(new impl(std::move(other))){}
 const_frame::~const_frame(){}
 const_frame::const_frame(const_frame&& other) : impl_(std::move(other.impl_)){}
@@ -272,6 +285,7 @@ const core::audio_channel_layout& const_frame::audio_channel_layout()const { ret
 array<const std::uint8_t> const_frame::image_data(int index)const{return impl_->image_data(index);}
 const core::audio_buffer& const_frame::audio_data()const{return impl_->audio_data_;}
 const std::vector<std::uint8_t>& const_frame::atsc_a53_cc()const{return impl_->atsc_a53_cc_;}
+const std::vector<std::pair<int, std::shared_ptr<AVSubtitle>>>& const_frame::subtitles()const{return impl_->subtitles_; }
 std::size_t const_frame::width()const{return impl_->width();}
 std::size_t const_frame::height()const{return impl_->height();}
 std::size_t const_frame::size()const{return impl_->size();}

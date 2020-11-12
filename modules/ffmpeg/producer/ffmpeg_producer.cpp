@@ -29,6 +29,7 @@
 #include "input/input.h"
 #include "audio/audio_decoder.h"
 #include "video/video_decoder.h"
+#include "subtitle/subtitle_decoder.h"
 #include "muxer/frame_muxer.h"
 #include "filter/audio_filter.h"
 
@@ -94,6 +95,7 @@ struct ffmpeg_producer : public core::frame_producer_base
 	input												input_;
 	std::unique_ptr<video_decoder>						video_decoder_;
 	std::vector<std::unique_ptr<audio_decoder>>			audio_decoders_;
+	std::vector<std::unique_ptr<subtitle_decoder>>		subtitle_decoders_;
 	std::unique_ptr<frame_muxer>						muxer_;
 
     caspar::executor worker_;
@@ -168,27 +170,44 @@ public:
 			{
 				auto stream = input_.context()->streams[stream_index];
 
-				if (stream->codec->codec_type != AVMediaType::AVMEDIA_TYPE_AUDIO)
-					continue;
-
-				try
+				if (stream->codec->codec_type == AVMediaType::AVMEDIA_TYPE_AUDIO)
 				{
-					audio_decoders_.push_back(std::unique_ptr<audio_decoder>(new audio_decoder(stream_index, input_.context(), format_desc.audio_sample_rate)));
-					audio_input_pads.emplace_back(
-							boost::rational<int>(1, format_desc.audio_sample_rate),
-							format_desc.audio_sample_rate,
-							AVSampleFormat::AV_SAMPLE_FMT_S32,
-							audio_decoders_.back()->ffmpeg_channel_layout());
-					CASPAR_LOG(info) << print() << L" " << audio_decoders_.back()->print();
+					try
+					{
+						audio_decoders_.push_back(std::unique_ptr<audio_decoder>(new audio_decoder(stream_index, input_.context(), format_desc.audio_sample_rate)));
+						audio_input_pads.emplace_back(
+								boost::rational<int>(1, format_desc.audio_sample_rate),
+								format_desc.audio_sample_rate,
+								AVSampleFormat::AV_SAMPLE_FMT_S32,
+								audio_decoders_.back()->ffmpeg_channel_layout());
+						CASPAR_LOG(info) << print() << L" " << audio_decoders_.back()->print();
+					}
+					catch (averror_stream_not_found&)
+					{
+						//CASPAR_LOG(warning) << print() << " No audio-stream found. Running without audio.";
+					}
+					catch (...)
+					{
+						CASPAR_LOG_CURRENT_EXCEPTION();
+						CASPAR_LOG(warning) << print() << " Failed to open audio-stream. Running without audio.";
+					}
 				}
-				catch (averror_stream_not_found&)
+				else if (stream->codec->codec_type == AVMediaType::AVMEDIA_TYPE_SUBTITLE)
 				{
-					//CASPAR_LOG(warning) << print() << " No audio-stream found. Running without audio.";
-				}
-				catch (...)
-				{
-					CASPAR_LOG_CURRENT_EXCEPTION();
-					CASPAR_LOG(warning) << print() << " Failed to open audio-stream. Running without audio.";
+					try
+					{
+						subtitle_decoders_.push_back(std::unique_ptr<subtitle_decoder>(new subtitle_decoder(stream_index, input_.context())));
+						CASPAR_LOG(info) << print() << L" " << subtitle_decoders_.back()->print();
+					}
+					catch (averror_stream_not_found&)
+					{
+						//CASPAR_LOG(warning) << print() << " No audio-stream found. Running without audio.";
+					}
+					catch (...)
+					{
+						CASPAR_LOG_CURRENT_EXCEPTION();
+						CASPAR_LOG(warning) << print() << " Failed to open subtitle-stream. Running without subtitles.";
+					}
 				}
 			}
 
@@ -605,6 +624,9 @@ public:
 
 			for (auto& audio_decoder : audio_decoders_)
 				audio_decoder->push(pkt);
+
+			for (auto& subtitle_decoder : subtitle_decoders_)
+				subtitle_decoder->push(pkt);
 		}
 
 		std::shared_ptr<AVFrame>									video;
@@ -636,6 +658,17 @@ public:
 					if (audio_for_stream)
 						audio.push_back(audio_for_stream);
 				}
+			}
+		},
+		[&]
+		{
+			for (auto& subtitle_decoder : subtitle_decoders_)
+			{
+				auto sub = subtitle_decoder->poll();
+				std::shared_ptr<AVSubtitle> subtitleref;
+				std::tie(std::ignore, std::ignore, subtitleref) = sub;
+				if (subtitleref != nullptr)
+					muxer_->push(sub);
 			}
 		});
 
