@@ -498,6 +498,16 @@ spl::shared_ptr<AVFrame> create_frame()
 	return frame;
 }
 
+spl::shared_ptr<AVSubtitle> create_subtitle()
+{
+	spl::shared_ptr<AVSubtitle> subtitle(new AVSubtitle, [](AVSubtitle* p)
+	{
+		avsubtitle_free(p);
+		delete[] p;
+	});
+	return subtitle;
+}
+
 std::shared_ptr<core::mutable_audio_buffer> flush_audio()
 {
 	static std::shared_ptr<core::mutable_audio_buffer> audio(new core::mutable_audio_buffer());

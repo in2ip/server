@@ -49,6 +49,7 @@ extern "C"
 #endif
 
 struct AVFrame;
+struct AVSubtitle;
 struct AVFormatContext;
 struct AVPacket;
 struct AVRational;
@@ -69,6 +70,7 @@ core::pixel_format_desc				pixel_format_desc(AVPixelFormat pix_fmt, int width, i
 
 spl::shared_ptr<AVPacket> create_packet();
 spl::shared_ptr<AVFrame>  create_frame();
+spl::shared_ptr<AVSubtitle> create_subtitle();
 
 spl::shared_ptr<AVCodecContext> open_codec(AVFormatContext& context, AVMediaType type, int& index, bool single_threaded);
 spl::shared_ptr<AVFormatContext> open_input(const std::wstring& filename);

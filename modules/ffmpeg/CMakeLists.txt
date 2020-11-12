@@ -12,6 +12,8 @@ set(SOURCES
 		producer/input/input.cpp
 
 		producer/muxer/frame_muxer.cpp
+		
+		producer/subtitle/subtitle_decoder.cpp
 
 		producer/util/flv.cpp
 		producer/util/util.cpp
@@ -38,6 +40,8 @@ set(HEADERS
 
 		producer/muxer/display_mode.h
 		producer/muxer/frame_muxer.h
+
+		producer/subtitle/subtitle_decoder.h
 
 		producer/util/flv.h
 		producer/util/util.h
