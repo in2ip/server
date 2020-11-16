@@ -184,7 +184,7 @@ core::mutable_frame make_frame(const void* tag, const spl::shared_ptr<AVFrame>& 
 		{
 			write.atsc_a53_cc().insert(write.atsc_a53_cc().begin(), atsc_a53_cc->data, (atsc_a53_cc->data+atsc_a53_cc->size));
 		}
-		write.set_pts(decoded_frame->pts);
+		write.set_pts(decoded_frame->best_effort_timestamp);
 
 		std::shared_ptr<SwsContext> sws_context;
 
@@ -239,7 +239,7 @@ core::mutable_frame make_frame(const void* tag, const spl::shared_ptr<AVFrame>& 
 		{
 			write.atsc_a53_cc().insert(write.atsc_a53_cc().begin(), atsc_a53_cc->data, (atsc_a53_cc->data+atsc_a53_cc->size));
 		}
-		write.set_pts(decoded_frame->pts);
+		write.set_pts(decoded_frame->best_effort_timestamp);
 
 		for(int n = 0; n < static_cast<int>(desc.planes.size()); ++n)
 		{

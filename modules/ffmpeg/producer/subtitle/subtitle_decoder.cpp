@@ -72,7 +72,7 @@ public:
 			packets_.push(spl::make_shared_ptr(packet));
 	}
 
-	std::tuple<int64_t, int, std::shared_ptr<AVSubtitle>> poll()
+	std::tuple<double, int, std::shared_ptr<AVSubtitle>> poll()
 	{
 		if(packets_.empty())
 			return std::make_tuple(0, 0, nullptr);
@@ -93,8 +93,7 @@ public:
 		if (subtitle == nullptr)
 			return std::make_tuple(0, 0, nullptr);
 		AVSubtitle * sub = subtitle.get();
-		sub->pts;
-		return std::make_tuple((int64_t)((sub->pts + (float)sub->start_display_time/1000)), index_, subtitle);
+		return std::make_tuple((double)(sub->pts/(double)AV_TIME_BASE), index_, subtitle);
 	}
 
 	std::shared_ptr<AVSubtitle> decode(AVPacket& pkt)
@@ -133,7 +132,7 @@ public:
 subtitle_decoder::subtitle_decoder(int stream_index, const spl::shared_ptr<AVFormatContext>& context) : impl_(new implementation(stream_index, context)){}
 void subtitle_decoder::push(const std::shared_ptr<AVPacket>& packet){impl_->push(packet);}
 bool subtitle_decoder::ready() const{return impl_->ready();}
-std::tuple<int64_t, int, std::shared_ptr<AVSubtitle>> subtitle_decoder::poll() { return impl_->poll(); }
+std::tuple<double, int, std::shared_ptr<AVSubtitle>> subtitle_decoder::poll() { return impl_->poll(); }
 std::wstring subtitle_decoder::print() const{return impl_->print();}
 
 }}

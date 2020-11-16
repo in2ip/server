@@ -40,7 +40,7 @@ public:
 
 	bool ready() const;
 	void push(const std::shared_ptr<AVPacket>& packet);
-	std::tuple<int64_t, int, std::shared_ptr<AVSubtitle>> poll();
+	std::tuple<double, int, std::shared_ptr<AVSubtitle>> poll();
 	std::wstring print() const;
 private:
 	struct implementation;

@@ -345,6 +345,7 @@ struct newtek_ndi_consumer : public boost::noncopyable
         boost::property_tree::ptree bitmap_subs;
         if (frame.subtitles().size() > 0)
         {
+            CASPAR_LOG(info) << "Got DVB Subs to NDI";
             for (auto& subtitle : frame.subtitles())
             {
                 int index = subtitle.first;

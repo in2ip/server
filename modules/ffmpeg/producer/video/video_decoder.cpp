@@ -54,6 +54,7 @@ struct video_decoder::implementation : boost::noncopyable
 {
 	int										index_				= -1;
 	const spl::shared_ptr<AVCodecContext>	codec_context_;
+    struct AVRational                       pkt_timebase_;
 
 	std::queue<spl::shared_ptr<AVPacket>>	packets_;
 
@@ -71,6 +72,7 @@ public:
 		, nb_frames_(static_cast<uint32_t>(context->streams[index_]->nb_frames))
 	{
 		file_frame_number_ = 0;
+        pkt_timebase_ = context->streams[index_]->time_base;
 
 		codec_context_->refcounted_frames = 1;
 	}
@@ -129,6 +131,9 @@ public:
 
 		if(frame_finished == 0)
 			return nullptr;
+        AVFrame *frame = decoded_frame.get();
+        double recalc_pts = av_q2d(pkt_timebase_) * frame->best_effort_timestamp;
+        frame->best_effort_timestamp = frame->pts = (int64_t)(recalc_pts * AV_TIME_BASE);
 
 		is_progressive_ = !decoded_frame->interlaced_frame;
 

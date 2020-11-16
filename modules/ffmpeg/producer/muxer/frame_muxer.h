@@ -56,7 +56,7 @@ public:
 
 	void push(const std::shared_ptr<AVFrame>& video_frame);
 	void push(const std::vector<std::shared_ptr<core::mutable_audio_buffer>>& audio_samples_per_stream);
-	void push(const std::tuple<int64_t, int, std::shared_ptr<AVSubtitle>>& subtitle);
+	void push(const std::tuple<double, int, std::shared_ptr<AVSubtitle>>& subtitle);
 
 	bool video_ready() const;
 	bool audio_ready() const;
