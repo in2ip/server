@@ -43,7 +43,7 @@
 #include <core/producer/media_info/media_info.h>
 #include <core/producer/framerate/framerate_producer.h>
 #include <core/frame/frame_factory.h>
-
+#include "core/scte/scte.h"
 #include <future>
 #include <mutex>
 #include <queue>
@@ -773,6 +773,18 @@ spl::shared_ptr<core::frame_producer> create_producer(
 
 	auto filter_str				= get_param(L"FILTER",			params, L"");
 	auto custom_channel_order	= get_param(L"CHANNEL_LAYOUT",	params, L"");
+	auto scte_str				= get_param(L"SCTE", 			params, L"");
+
+    if (!scte_str.empty())
+    {
+	    try {
+		    auto scte_104 = std::make_unique<caspar::core::scte_104>(scte_str);
+	    }
+	    catch (...)
+	    {
+		    //
+	    }
+    }
 
 	boost::ireplace_all(filter_str, L"DEINTERLACE_BOB",	L"YADIF=1:-1");
 	boost::ireplace_all(filter_str, L"DEINTERLACE_LQ",	L"SEPARATEFIELDS");

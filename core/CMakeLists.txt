@@ -53,6 +53,7 @@ set(SOURCES
 		producer/layer.cpp
 		producer/stage.cpp
 
+		scte/scte.cpp
 		system_info_provider.cpp
 		StdAfx.cpp
 		thumbnail_generator.cpp
