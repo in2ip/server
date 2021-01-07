@@ -23,8 +23,32 @@
 #include "common/param.h"
 #include "common/except.h"
 #include <cstdint>
-
+#include <vector>
 namespace caspar { namespace core {
+
+void split_param(const std::wstring& in, std::list<std::wstring> &tokens)
+{
+    std::wstring currentparam;
+    for (size_t index; index < in.length(); index++)
+    {
+        if (in[index] == L'=' || in[index] == L',' || in[index] == L' ')
+        {
+            if (!currentparam.empty())
+            {
+                tokens.push_back(currentparam);
+                currentparam.clear();
+            }
+            continue;
+        }
+
+        currentparam += in[index];
+    }
+    if (!currentparam.empty())
+    {
+        tokens.push_back(currentparam);
+        currentparam.clear();
+    }
+}
 
 struct scte_104::impl : boost::noncopyable
 {
@@ -43,18 +67,21 @@ struct scte_104::impl : boost::noncopyable
         constexpr auto uint32_max = std::numeric_limits<uint32_t>::max();
         constexpr auto uint16_max = std::numeric_limits<uint16_t>::max();
         constexpr auto uint8_max = 255U;
-        /*auto opid_s				= get_param(L"OPID", 			scte_string, L"");
+        std::list<std::wstring> tokens;
+        split_param(scte_string, tokens);
+        std::vector<std::wstring> parameters(tokens.begin(), tokens.end());
+        auto opid_s				= get_param(L"OPID", 			parameters, L"");
         CASPAR_LOG(info) << opid_s;
         if (opid_s.empty())
             CASPAR_THROW_EXCEPTION(user_error() << msg_info(L"SCTE without OPID Param ") << nested_exception(std::current_exception()));
         if (opid_s.find(L"SPLICE_NULL", 0) == 0) {
             opid = opid_splice_null;
         } else if (opid_s.find(L"SPLICE", 0) == 0) {
-            auto splice_type_s		= get_param(L"SPLICE_TYPE", 	scte_string, L"");
+            auto splice_type_s		= get_param(L"SPLICE_TYPE", 	parameters, L"");
 
         } else {
             CASPAR_THROW_EXCEPTION(user_error() << msg_info(L"SCTE wrong OPID Param ") << nested_exception(std::current_exception()));
-        }*/
+        }
         
     }
 };

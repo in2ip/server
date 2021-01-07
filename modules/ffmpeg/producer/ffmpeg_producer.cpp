@@ -782,7 +782,7 @@ spl::shared_ptr<core::frame_producer> create_producer(
 	    }
 	    catch (...)
 	    {
-		    //
+		    CASPAR_LOG_CURRENT_EXCEPTION();
 	    }
     }
 
