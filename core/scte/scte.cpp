@@ -20,8 +20,11 @@
 */
 
 #include "scte.h"
+#include "bitstream.h"
+#include "vanc.h"
 #include "common/param.h"
 #include "common/except.h"
+
 #include <cstdint>
 #include <vector>
 namespace caspar { namespace core {
@@ -51,20 +54,20 @@ void split_param(const std::wstring& in, std::list<std::wstring> &tokens)
 }
 
 enum scte_104_opid {
-    opid_null,
-    opid_splice,
-    opid_splice_null
+    opid_null = 0xFFFF,//reserved
+    opid_splice = 0x0101,
+    opid_splice_null = 0x0102
 };
 #define OPID_SPLICE L"SPLICE"
 #define OPID_SPLICE_NULL L"SPLICE_NULL"
 
 enum scte_104_splice_type {
-    splice_type_null,
-    start_normal,
-    start_immediate,
-    end_normal,
-    end_immediate,
-    cancel
+    splice_type_null = 0, //reserved
+    start_normal = 1,
+    start_immediate = 2,
+    end_normal = 3,
+    end_immediate = 4,
+    cancel = 5
 };
 #define SPLICE_START_NORMAL L"START_NORMAL"
 #define SPLICE_START_IMMEDIATE L"START_IMMEDIATE"
@@ -91,7 +94,7 @@ struct scte_104::impl : boost::noncopyable
 
     impl(const std::wstring &scte_string)
     {
-        CASPAR_LOG(info) << scte_string;
+        CASPAR_LOG(debug) << scte_string;
         constexpr auto uint32_max = std::numeric_limits<uint32_t>::max();
         constexpr auto uint16_max = std::numeric_limits<uint16_t>::max();
         constexpr auto uint8_max = 255U;
@@ -134,19 +137,90 @@ struct scte_104::impl : boost::noncopyable
         }
     }
 
-    std::unique_ptr<std::vector<unsigned char>> get_data(bool null)
+    void write_scte_104_hdr(std::vector<std::uint8_t>&buf)
     {
-        CASPAR_LOG(debug) << "Would've send splice data elapsed:" << since_last_splice_cmd.elapsed();
-        next_remaining_mark -= 15000;
-        if (next_remaining_mark < 45000 || next_remaining_mark > pre_roll_time)
-        {
-            opid = opid_splice_null;
-        }
-        since_last_splice_cmd.restart();
-        return nullptr;
+        Bitstream bs = Bitstream(buf);
+
+        bs.write_byte(0x08);//2010 Payload Descriptor (not part of SCTE-104, but here to ease conversion to VANC)
+
+        bs.write_bytes_msb(0xFFFF, 2);//reserved
+        bs.write_bytes_msb(0, 2);//messageSize
+        bs.write_byte(0);//protocol_version
+        bs.write_byte(0);//AS_index
+        bs.write_byte(0);//message_number
+        bs.write_bytes_msb(0, 2);//DPI_PID_index
+        bs.write_byte(0);//SCE35_protocol_version
+        bs.write_byte(0);//timestamp.type
+        bs.write_byte(1);//num_ops
     }
 
-    std::unique_ptr<std::vector<unsigned char>> tick()
+    void set_scte_104_length(std::vector<std::uint8_t>&buf)
+    {
+        std::size_t size = buf.size() -1;// minus one because of inclusion of 2010 PD
+        uint8_t *data = buf.data();
+        data[2] = size >> 8;
+        data[3] = size & 0xff;
+    }
+
+    void write_scte_104_splice_request(std::vector<std::uint8_t>&buf)
+    {
+        Bitstream bs = Bitstream(buf);
+        bs.write_bytes_msb(opid, 2);//opID
+        bs.write_bytes_msb(14, 2);//data_length
+
+        bs.write_byte(splice_type);//splice_insert_type
+        bs.write_bytes_msb(event_id, 4);//splice_event_id
+        bs.write_bytes_msb(unique_program_id, 2);//unique_program_id
+        bs.write_bytes_msb(next_remaining_mark, 2);//pre_roll_time
+        bs.write_bytes_msb(break_duration, 2);//break_duration
+        bs.write_byte(avail_num);//avail_num
+        bs.write_byte(avails_expected);//avails_expected
+        bs.write_byte(auto_return_flag);//auto_return_flag
+        CASPAR_LOG(debug) << "Splice request, type: " << splice_type
+                          << " event id: " << event_id
+                          << " unique program_id: " << unique_program_id
+                          << " pre_roll_time: " << next_remaining_mark
+                          << " break_duration: " << break_duration
+                          << " avail_num: " << avail_num
+                          << " avails_expected: " << avails_expected
+                          << " auto_return_flag: " << auto_return_flag;
+    }
+
+    void write_scte_104_splice_request_null(std::vector<std::uint8_t> &buf)
+    {
+        CASPAR_LOG(debug) << "Splice NULL";
+        Bitstream bs = Bitstream(buf);
+        bs.write_bytes_msb(opid, 2);
+        bs.write_bytes_msb(0 , 2);
+    }
+
+    std::vector<uint16_t> get_data(bool null)
+    {
+        
+        std::vector<std::uint16_t> vanc_buf = std::vector<std::uint16_t>();
+        
+        std::vector<std::uint8_t> scte_104_buf = std::vector<std::uint8_t>();
+        scte_104_buf.reserve(255);
+        write_scte_104_hdr(scte_104_buf);
+        if (opid == opid_splice) {
+            
+            write_scte_104_splice_request(scte_104_buf);
+            next_remaining_mark -= 10000;
+            if (next_remaining_mark <= 45000 || next_remaining_mark > pre_roll_time)
+            {
+                opid = opid_splice_null;
+            }
+        } else
+        {
+            write_scte_104_splice_request_null(scte_104_buf);
+        }
+        write_vanc_pkt_10bit(scte_104_buf, vanc_buf, 0x41, 0x07);
+        
+        since_last_splice_cmd.restart();
+        return vanc_buf;
+    }
+
+    std::vector<uint16_t> tick()
     {
         if (!started)
         {
@@ -163,7 +237,7 @@ struct scte_104::impl : boost::noncopyable
         if (since_last_splice_cmd.elapsed() >= 1) {
             return get_data(true);
         }
-        return nullptr;
+        return std::vector<uint16_t>();
     }
 };
 
@@ -176,6 +250,6 @@ scte_104& scte_104::operator=(scte_104&& other)
 	impl_ = std::move(other.impl_);
 	return *this;
 }
-std::unique_ptr<std::vector<unsigned char>> scte_104::tick(){ return impl_->tick(); }
+std::vector<uint16_t> scte_104::tick(){ return impl_->tick(); }
 
 }}

@@ -338,8 +338,13 @@ public:
 
 		send_osc();
 
-		if (scte_104_)
+		if (scte_104_) {
 			auto data = scte_104_.get()->tick();
+			if (!data.empty())
+			{
+				CASPAR_LOG(debug) << "Got SCTE data";
+			}
+		}
 		return frame;
 	}
 
