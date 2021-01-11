@@ -135,6 +135,16 @@ struct scte_104::impl : boost::noncopyable
                 auto_return_flag = contains_param(L"AUTO_RETURN", parameters);
             }
         }
+        CASPAR_LOG(debug) << "SCTE Configured with: OPID: " << opid
+                          << "Splice request, type: " << splice_type
+                          << " event id: " << event_id
+                          << " unique program_id: " << unique_program_id
+                          << " pre_roll_time: " << next_remaining_mark
+                          << " break_duration: " << break_duration
+                          << " avail_num: " << avail_num
+                          << " avails_expected: " << avails_expected
+                          << " auto_return_flag: " << auto_return_flag;
+
     }
 
     void write_scte_104_hdr(std::vector<std::uint8_t>&buf)
@@ -205,8 +215,8 @@ struct scte_104::impl : boost::noncopyable
         if (opid == opid_splice) {
             
             write_scte_104_splice_request(scte_104_buf);
-            next_remaining_mark -= 10000;
-            if (next_remaining_mark <= 45000 || next_remaining_mark > pre_roll_time)
+            next_remaining_mark -= 1000;
+            if (next_remaining_mark <= 4500 || next_remaining_mark > pre_roll_time)
             {
                 opid = opid_splice_null;
             }
@@ -225,7 +235,7 @@ struct scte_104::impl : boost::noncopyable
         if (!started)
         {
             since_first_frame.restart();
-            auto data = get_data(opid = opid_splice_null);
+            auto data = get_data(opid == opid_splice_null);
             started = true;
             return data;
         }
