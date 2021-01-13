@@ -30,7 +30,7 @@
 #include <core/mixer/audio/audio_util.h>
 #include <core/video_format.h>
 #include <core/monitor/monitor.h>
-
+#include "core/ancillary/ancillary.h"
 
 #include <common/assert.h>
 #include <common/diagnostics/graph.h>
@@ -328,17 +328,15 @@ struct newtek_ndi_consumer : public boost::noncopyable
             a_data = core::audio_buffer(buf->data(), buf->size(), true, std::move(buf));
         }
 
-        size_t a53_size = frame.atsc_a53_cc().size();
-        char *base64_a53_cc = NULL;
-        bool write_meta = false;
         std::stringstream metadata;
         boost::property_tree::ptree metadata_tree;
-        if (a53_size > 0)
+        bool write_meta = false;
+        for (auto& ancillary_data : frame.ancillary().ancillary_data)
         {
-            base64_a53_cc = (char*)calloc(Base64encode_len(a53_size) +1, 1);
-            Base64encode(base64_a53_cc,(const char *)frame.atsc_a53_cc().data(), a53_size);
-            metadata_tree.put("CEA708-A53", base64_a53_cc);
-            free(base64_a53_cc);
+            char *base64_vanc = (char*)calloc(Base64encode_len(ancillary_data.second.size() * 4) +1, 1);
+            Base64encode(base64_vanc, (const char *)ancillary_data.second.data(), ancillary_data.second.size());
+            metadata_tree.put("VANC_DATA", base64_vanc);
+            free(base64_vanc);
             write_meta = true;
         }
 

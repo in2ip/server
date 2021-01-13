@@ -105,7 +105,7 @@ public:
 
 	array<const std::uint8_t> image_data(int index = 0) const;
 	const core::audio_buffer& audio_data() const;
-
+	const core::ancillary& ancillary() const;
 	std::size_t width() const;
 	std::size_t height() const;
 	std::size_t size() const;

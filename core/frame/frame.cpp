@@ -268,6 +268,7 @@ const core::pixel_format_desc& const_frame::pixel_format_desc()const{return impl
 const core::audio_channel_layout& const_frame::audio_channel_layout()const { return impl_->channel_layout_; }
 array<const std::uint8_t> const_frame::image_data(int index)const{return impl_->image_data(index);}
 const core::audio_buffer& const_frame::audio_data()const{return impl_->audio_data_;}
+const core::ancillary& const_frame::ancillary()const{return impl_->ancillary_data_;}
 std::size_t const_frame::width()const{return impl_->width();}
 std::size_t const_frame::height()const{return impl_->height();}
 std::size_t const_frame::size()const{return impl_->size();}
