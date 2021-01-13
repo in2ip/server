@@ -44,6 +44,7 @@
 #include <core/producer/framerate/framerate_producer.h>
 #include <core/frame/frame_factory.h>
 #include "core/scte/scte.h"
+#include "core/ancillary/ancillary.h"
 #include <future>
 #include <mutex>
 #include <queue>
@@ -343,6 +344,7 @@ public:
 			if (!data.empty())
 			{
 				CASPAR_LOG(debug) << "Got SCTE data";
+				frame.first.ancillary().add(caspar::core::anc_type_scte_104, data);
 			}
 		}
 		return frame;
@@ -541,6 +543,20 @@ public:
 				seek = nb_frames - 1;
 
 			input_.seek(static_cast<uint32_t>(seek));
+		} else if (boost::iequals(cmd, L"scte"))
+		{
+			if (value.empty())
+				scte_104_ = nullptr;
+			else
+			{
+				if (!scte_104_)
+				{
+					scte_104_ = std::make_unique<caspar::core::scte_104>(value);
+				} else
+				{
+					scte_104_.get()->update(value);
+				}
+			}
 		}
 		else
 			CASPAR_THROW_EXCEPTION(invalid_argument());

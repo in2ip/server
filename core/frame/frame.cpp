@@ -116,6 +116,7 @@ struct const_frame::impl : boost::noncopyable
 	bool																should_record_age_;
 	mutable std::atomic<int64_t>										recorded_age_;
 	std::shared_future<array<const std::uint8_t>>						key_only_on_demand_;
+	core::ancillary														ancillary_data_;
 
 	impl(const void* tag)
 		: audio_data_(0, 0, true, 0)
@@ -145,6 +146,7 @@ struct const_frame::impl : boost::noncopyable
 	impl(
 			std::shared_future<array<const std::uint8_t>> image,
 			audio_buffer audio_data,
+			core::ancillary ancillary_data,
 			const void* tag,
 			const core::pixel_format_desc& desc,
 			const core::audio_channel_layout& channel_layout,
@@ -156,6 +158,7 @@ struct const_frame::impl : boost::noncopyable
 		, geometry_(frame_geometry::get_default())
 		, since_created_timer_(std::move(since_created_timer))
 		, should_record_age_(false)
+		, ancillary_data_(std::move(ancillary_data))
 	{
 		if (desc.format != core::pixel_format::bgra)
 			CASPAR_THROW_EXCEPTION(not_implemented());
@@ -201,7 +204,7 @@ struct const_frame::impl : boost::noncopyable
 
 	spl::shared_ptr<impl> key_only() const
 	{
-		return spl::make_shared<impl>(key_only_on_demand_, audio_data_, tag_, desc_, channel_layout_, since_created_timer_);
+		return spl::make_shared<impl>(key_only_on_demand_, audio_data_, ancillary_data_, tag_, desc_, channel_layout_, since_created_timer_);
 	}
 
 	std::size_t width() const
@@ -237,10 +240,11 @@ const_frame::const_frame(const void* tag) : impl_(new impl(tag)){}
 const_frame::const_frame(
 		std::shared_future<array<const std::uint8_t>> image,
 		audio_buffer audio_data,
+		core::ancillary ancillary_data,
 		const void* tag,
 		const core::pixel_format_desc& desc,
 		const core::audio_channel_layout& channel_layout)
-	: impl_(new impl(std::move(image), std::move(audio_data), tag, desc, channel_layout)){}
+	: impl_(new impl(std::move(image), std::move(audio_data),std::move(ancillary_data), tag, desc, channel_layout)){}
 const_frame::const_frame(mutable_frame&& other) : impl_(new impl(std::move(other))){}
 const_frame::~const_frame(){}
 const_frame::const_frame(const_frame&& other) : impl_(std::move(other.impl_)){}

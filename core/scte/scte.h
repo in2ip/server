@@ -33,8 +33,9 @@ namespace caspar { namespace core {
         ~scte_104();
         scte_104(scte_104&& other);
         scte_104& operator=(scte_104&& other);
-        std::vector<uint16_t> tick();
-
+        std::vector<uint32_t> tick();
+        void update(const std::wstring& scte_string);
+        
     private:
 	    struct impl;
 	    spl::unique_ptr<impl> impl_;

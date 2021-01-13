@@ -5,6 +5,7 @@
 #include <common/memory.h>
 #include <common/array.h>
 #include <common/timer.h>
+#include "core/ancillary/ancillary.h"
 
 #include <future>
 #include <cstddef>
@@ -80,6 +81,7 @@ public:
 	explicit const_frame(const void* tag = nullptr);
 	explicit const_frame(std::shared_future<array<const std::uint8_t>> image,
 						audio_buffer audio_data,
+						core::ancillary ancillary_data,
 						const void* tag,
 						const pixel_format_desc& desc,
 						const audio_channel_layout& channel_layout);

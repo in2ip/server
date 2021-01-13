@@ -92,11 +92,13 @@ public:
 						static_cast<double>(format_desc.square_width)
 						/ static_cast<double>(format_desc.square_height));
 
+				caspar::core::ancillary ancillary;
 				for (auto& frame : frames)
 				{
 					frame.second.accept(audio_mixer_);
 					frame.second.transform().image_transform.layer_depth = 1;
 					frame.second.accept(*image_mixer_);
+					ancillary = std::move(frame.second.ancillary());
 				}
 
 				auto image = (*image_mixer_)(format_desc, straighten_alpha_);
@@ -104,7 +106,7 @@ public:
 
 				auto desc = core::pixel_format_desc(core::pixel_format::bgra);
 				desc.planes.push_back(core::pixel_format_desc::plane(format_desc.width, format_desc.height, 4));
-				return const_frame(std::move(image), std::move(audio), this, desc, channel_layout);
+				return const_frame(std::move(image), std::move(audio), std::move(ancillary), this, desc, channel_layout);
 			}
 			catch(...)
 			{

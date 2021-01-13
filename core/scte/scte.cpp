@@ -94,6 +94,11 @@ struct scte_104::impl : boost::noncopyable
 
     impl(const std::wstring &scte_string)
     {
+        parse_params(scte_string);
+    }
+
+    void parse_params(const std::wstring& scte_string)
+    {
         CASPAR_LOG(debug) << scte_string;
         constexpr auto uint32_max = std::numeric_limits<uint32_t>::max();
         constexpr auto uint16_max = std::numeric_limits<uint16_t>::max();
@@ -144,7 +149,7 @@ struct scte_104::impl : boost::noncopyable
                           << " avail_num: " << avail_num
                           << " avails_expected: " << avails_expected
                           << " auto_return_flag: " << auto_return_flag;
-
+        started = false;
     }
 
     void write_scte_104_hdr(std::vector<std::uint8_t>&buf)
@@ -204,11 +209,8 @@ struct scte_104::impl : boost::noncopyable
         bs.write_bytes_msb(0 , 2);
     }
 
-    std::vector<uint16_t> get_data(bool null)
+    std::vector<uint32_t> get_data(bool null)
     {
-        
-        std::vector<std::uint16_t> vanc_buf = std::vector<std::uint16_t>();
-        
         std::vector<std::uint8_t> scte_104_buf = std::vector<std::uint8_t>();
         scte_104_buf.reserve(255);
         write_scte_104_hdr(scte_104_buf);
@@ -224,13 +226,13 @@ struct scte_104::impl : boost::noncopyable
         {
             write_scte_104_splice_request_null(scte_104_buf);
         }
-        write_vanc_pkt_10bit(scte_104_buf, vanc_buf, 0x41, 0x07);
-        
+        auto vanc_buf = write_vanc_pkt_10bit(scte_104_buf, 0x41, 0x07);
+        auto v210_packed = pack_vanc_v210(vanc_buf, 1920);
         since_last_splice_cmd.restart();
-        return vanc_buf;
+        return v210_packed;
     }
 
-    std::vector<uint16_t> tick()
+    std::vector<uint32_t> tick()
     {
         if (!started)
         {
@@ -247,7 +249,7 @@ struct scte_104::impl : boost::noncopyable
         if (since_last_splice_cmd.elapsed() >= 1) {
             return get_data(true);
         }
-        return std::vector<uint16_t>();
+        return std::vector<uint32_t>();
     }
 };
 
@@ -260,6 +262,6 @@ scte_104& scte_104::operator=(scte_104&& other)
 	impl_ = std::move(other.impl_);
 	return *this;
 }
-std::vector<uint16_t> scte_104::tick(){ return impl_->tick(); }
-
+std::vector<uint32_t> scte_104::tick(){ return impl_->tick(); }
+void scte_104::update(const std::wstring& scte_string) { impl_->parse_params(scte_string); };
 }}
