@@ -173,8 +173,8 @@ struct scte_104::impl : boost::noncopyable
     {
         std::size_t size = buf.size() -1;// minus one because of inclusion of 2010 PD
         uint8_t *data = buf.data();
-        data[2] = size >> 8;
-        data[3] = size & 0xff;
+        data[3] = size >> 8;
+        data[4] = size & 0xff;
     }
 
     void write_scte_104_splice_request(std::vector<std::uint8_t>&buf)
@@ -226,6 +226,7 @@ struct scte_104::impl : boost::noncopyable
         {
             write_scte_104_splice_request_null(scte_104_buf);
         }
+        set_scte_104_length(scte_104_buf);
         auto vanc_buf = write_vanc_pkt_10bit(scte_104_buf, 0x41, 0x07);
         auto v210_packed = pack_vanc_v210(vanc_buf, 1920);
         since_last_splice_cmd.restart();

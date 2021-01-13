@@ -25,6 +25,7 @@
 #include "frame.h"
 #include "frame_transform.h"
 #include "core/ancillary/ancillary.h"
+#include "common/except.h"
 namespace caspar { namespace core {
 
 enum class tags
@@ -60,12 +61,17 @@ public:
 	impl(std::vector<draw_frame> frames)
 		: frames_(std::move(frames))
 	{
+        for (auto& frame: frames_)
+        {
+            ancillary = std::move(frame.ancillary());
+        }
 	}
 
 	impl(const impl& other)
 		: frames_(other.frames_)
 		, frame_(other.frame_)
 		, frame_transform_(other.frame_transform_)
+        , ancillary(other.ancillary)
 	{
 	}
 
@@ -137,7 +143,6 @@ draw_frame draw_frame::interlace(draw_frame frame1, draw_frame frame2, core::fie
 
 	if(frame1 == frame2 || mode == field_mode::progressive)
 		return frame2;
-
 	if(mode == field_mode::upper)
 	{
 		frame1.transform().image_transform.field_mode = field_mode::upper;

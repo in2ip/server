@@ -78,6 +78,6 @@ private:
 	struct impl;
 	spl::unique_ptr<impl> impl_;
 };
-	
 
 }}
+

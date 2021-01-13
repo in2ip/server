@@ -333,8 +333,10 @@ struct newtek_ndi_consumer : public boost::noncopyable
         bool write_meta = false;
         for (auto& ancillary_data : frame.ancillary().ancillary_data)
         {
+            CASPAR_LOG(debug) << "Adding VANC type: " << ancillary_data.first << " to metadata";
             char *base64_vanc = (char*)calloc(Base64encode_len(ancillary_data.second.size() * 4) +1, 1);
             Base64encode(base64_vanc, (const char *)ancillary_data.second.data(), ancillary_data.second.size());
+            CASPAR_LOG(debug) << base64_vanc;
             metadata_tree.put("VANC_DATA", base64_vanc);
             free(base64_vanc);
             write_meta = true;
