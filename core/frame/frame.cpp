@@ -116,7 +116,7 @@ struct const_frame::impl : boost::noncopyable
 	bool																should_record_age_;
 	mutable std::atomic<int64_t>										recorded_age_;
 	std::shared_future<array<const std::uint8_t>>						key_only_on_demand_;
-	core::ancillary														ancillary_data_;
+	core::ancillary::AncillaryContainer									ancillary_data_;
 
 	impl(const void* tag)
 		: audio_data_(0, 0, true, 0)
@@ -146,7 +146,7 @@ struct const_frame::impl : boost::noncopyable
 	impl(
 			std::shared_future<array<const std::uint8_t>> image,
 			audio_buffer audio_data,
-			core::ancillary ancillary_data,
+			core::ancillary::AncillaryContainer ancillary_data,
 			const void* tag,
 			const core::pixel_format_desc& desc,
 			const core::audio_channel_layout& channel_layout,
@@ -240,7 +240,7 @@ const_frame::const_frame(const void* tag) : impl_(new impl(tag)){}
 const_frame::const_frame(
 		std::shared_future<array<const std::uint8_t>> image,
 		audio_buffer audio_data,
-		core::ancillary ancillary_data,
+		core::ancillary::AncillaryContainer ancillary_data,
 		const void* tag,
 		const core::pixel_format_desc& desc,
 		const core::audio_channel_layout& channel_layout)
@@ -268,7 +268,7 @@ const core::pixel_format_desc& const_frame::pixel_format_desc()const{return impl
 const core::audio_channel_layout& const_frame::audio_channel_layout()const { return impl_->channel_layout_; }
 array<const std::uint8_t> const_frame::image_data(int index)const{return impl_->image_data(index);}
 const core::audio_buffer& const_frame::audio_data()const{return impl_->audio_data_;}
-const core::ancillary& const_frame::ancillary()const{return impl_->ancillary_data_;}
+const core::ancillary::AncillaryContainer& const_frame::ancillary()const{return impl_->ancillary_data_;}
 std::size_t const_frame::width()const{return impl_->width();}
 std::size_t const_frame::height()const{return impl_->height();}
 std::size_t const_frame::size()const{return impl_->size();}

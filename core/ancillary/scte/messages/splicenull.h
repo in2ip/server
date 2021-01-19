@@ -19,27 +19,22 @@
 * Author: Gijs Peskens <gijs@in2ip.nl>
 */
 #pragma once
-#include "../StdAfx.h"
 
-#include "core/ancillary/ancillary.h"
+#include "messages.h"
+#include "core/ancillary/bitstream.h"
+#include "core/StdAfx.h"
 
-namespace caspar { namespace core {
-    
-    class scte_104 final
+namespace caspar { namespace core { namespace ancillary { namespace scte104 {
+
+    class SpliceNull : public SCTE104Msg
     {
-        scte_104(const scte_104&);
-        scte_104& operator=(const scte_104&);
-
-    public:
-        explicit scte_104(const std::wstring& scte_string);
-        ~scte_104();
-        scte_104(scte_104&& other);
-        scte_104& operator=(scte_104&& other);
-        std::shared_ptr<core::ancillary::AncillaryData>  tick();
-        void update(const std::wstring& scte_string);
-        
-    private:
-	    struct impl;
-	    spl::unique_ptr<impl> impl_;
+        public:
+            void appendData(std::vector<uint8_t> &buf) 
+            {
+                Bitstream bs = Bitstream(buf);
+                bs.write_bytes_msb(opid_splice_null, 2);
+                bs.write_bytes_msb(0 , 2);
+            }
+            scte_104_opid getOpID() { return opid_splice_null; }
     };
-}}
+}}}}

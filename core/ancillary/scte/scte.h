@@ -19,27 +19,21 @@
 * Author: Gijs Peskens <gijs@in2ip.nl>
 */
 #pragma once
-#include "../StdAfx.h"
 
-#include "core/ancillary/ancillary.h"
+#include "../ancillary.h"
+#include "messages/messages.h"
 
-namespace caspar { namespace core {
-    
-    class scte_104 final
-    {
-        scte_104(const scte_104&);
-        scte_104& operator=(const scte_104&);
+namespace caspar { namespace core { namespace ancillary {
 
+class SCTE104AncData : public AncillaryData
+{
     public:
-        explicit scte_104(const std::wstring& scte_string);
-        ~scte_104();
-        scte_104(scte_104&& other);
-        scte_104& operator=(scte_104&& other);
-        std::shared_ptr<core::ancillary::AncillaryData>  tick();
-        void update(const std::wstring& scte_string);
-        
+        std::vector<uint8_t> getData();
+        void getVancID(uint8_t& did, uint8_t& sdid) { did = 0x41; sdid = 0x07; }
+        ancillary_data_type getType() { return ancillary_data_type_scte_104; }
+        void addMsg(std::shared_ptr<scte104::SCTE104Msg> msg);
     private:
-	    struct impl;
-	    spl::unique_ptr<impl> impl_;
-    };
-}}
+        std::list<std::shared_ptr<scte104::SCTE104Msg>> messages;
+};
+
+}}}

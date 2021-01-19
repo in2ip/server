@@ -38,7 +38,7 @@ enum class tags
 
 struct draw_frame::impl
 {
-	caspar::core::ancillary			ancillary;
+	ancillary::AncillaryContainer	ancillary;
 	std::shared_ptr<const_frame>	frame_;
 	std::vector<draw_frame>			frames_;
 	core::frame_transform			frame_transform_;
@@ -128,7 +128,7 @@ draw_frame& draw_frame::operator=(draw_frame other)
 }
 void draw_frame::swap(draw_frame& other){impl_.swap(other.impl_);}
 
-caspar::core::ancillary& draw_frame::ancillary() { return impl_->ancillary;}
+caspar::core::ancillary::AncillaryContainer& draw_frame::ancillary() { return impl_->ancillary;}
 const core::frame_transform& draw_frame::transform() const { return impl_->frame_transform_;}
 core::frame_transform& draw_frame::transform() { return impl_->frame_transform_;}
 void draw_frame::accept(frame_visitor& visitor) const{impl_->accept(visitor);}

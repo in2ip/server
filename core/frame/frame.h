@@ -81,7 +81,7 @@ public:
 	explicit const_frame(const void* tag = nullptr);
 	explicit const_frame(std::shared_future<array<const std::uint8_t>> image,
 						audio_buffer audio_data,
-						core::ancillary ancillary_data,
+						core::ancillary::AncillaryContainer ancillary_data,
 						const void* tag,
 						const pixel_format_desc& desc,
 						const audio_channel_layout& channel_layout);
@@ -105,7 +105,7 @@ public:
 
 	array<const std::uint8_t> image_data(int index = 0) const;
 	const core::audio_buffer& audio_data() const;
-	const core::ancillary& ancillary() const;
+	const core::ancillary::AncillaryContainer& ancillary() const;
 	std::size_t width() const;
 	std::size_t height() const;
 	std::size_t size() const;

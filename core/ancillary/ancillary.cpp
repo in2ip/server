@@ -1,16 +1,29 @@
-#include <cstdint>
-#include <vector>
+/*
+* Copyright (c) 2020 in2ip B.V.
+*
+* This file is part of CasparCG (www.casparcg.com).
+*
+* CasparCG is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* CasparCG is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with CasparCG. If not, see <http://www.gnu.org/licenses/>.
+*
+* Author: Gijs Peskens <gijs@in2ip.nl>
+*/
 
-#ifndef _WIN32
-extern "C" {
-	#include "endian.h"
-}
-#else
-	//Safe to assume win32 is LE
-	#define htole32(x) (x)
-#endif
+#include "ancillary.h"
 
-static inline std::vector<std::uint16_t> write_vanc_pkt_10bit(std::vector<std::uint8_t> const &inbuf, uint8_t did,uint8_t sdid)
+namespace caspar { namespace core { namespace ancillary {
+
+std::vector<std::uint16_t> write_vanc_pkt_10bit(std::vector<std::uint8_t> const &inbuf, uint8_t did,uint8_t sdid)
 {
     std::vector<std::uint16_t> outbuf = std::vector<std::uint16_t>();
     outbuf.reserve(inbuf.size() + 7);//vanc header (3) + sdid + (1) + did (1) + count (1) + checksum (1) = 7;
@@ -45,7 +58,7 @@ void inline write_v210_pixel(uint32_t pixel, std::vector<std::uint32_t>&dst)
 	dst.push_back(htole32(pixel));
 }
 
-static void pack_y10_to_v210(uint16_t *src, std::vector<uint32_t>& dst, int width)
+void pack_y10_to_v210(uint16_t *src, std::vector<uint32_t>& dst, int width)
 {
 	size_t len = width /6;//6 Y per 4 pixels
 	size_t w;
@@ -78,7 +91,7 @@ static void pack_y10_to_v210(uint16_t *src, std::vector<uint32_t>& dst, int widt
 	}
 }
 
-static void pack_uyvy_to_v210(uint16_t *src, std::vector<uint32_t>& dst, int width)
+void pack_uyvy_to_v210(uint16_t *src, std::vector<uint32_t>& dst, int width)
 {
 	size_t len = width /12;//We fill all datapoints per block of 4 pixels
 	size_t w;
@@ -149,7 +162,7 @@ static void pack_uyvy_to_v210(uint16_t *src, std::vector<uint32_t>& dst, int wid
 	}
 }
 
-static inline std::vector<uint32_t> pack_vanc_v210(std::vector<uint16_t>&inbuf, int width)
+std::vector<uint32_t> pack_vanc_v210(std::vector<uint16_t>&inbuf, int width)
 {
     std::vector<uint32_t> out_buf = std::vector<uint32_t>();
 	size_t allign_size = (width + 31) & ~31;//First next 128byte boundary, not sure if needed
@@ -161,3 +174,49 @@ static inline std::vector<uint32_t> pack_vanc_v210(std::vector<uint16_t>&inbuf, 
 	out_buf.resize(allign_size, 0);
     return out_buf;
 }
+
+
+    std::list<std::vector<uint32_t>> AncillaryContainer::getAncillaryAsLines(uint32_t width, ancillary_data_type exclude) const
+    {
+        std::list<std::vector<uint32_t>> lines;
+        uint32_t pixels_remaining, pixels_per_line;
+        if (width > 720)
+            pixels_remaining = pixels_per_line = (width / 4) * 6;
+        else
+            pixels_remaining = pixels_per_line = (width / 4) * 12;
+        std::list<std::vector<uint16_t>> lines_data;
+        std::vector<uint16_t> line;
+        line.reserve(pixels_per_line);
+        for (auto& data : ancillary_data_container)
+        {
+            if ((data->getType() & exclude) == 0)
+            {
+                auto pkt_data = data->getData();
+                uint8_t did, sdid;
+                data->getVancID(did, sdid);
+                auto vanc_pkt = write_vanc_pkt_10bit(pkt_data, did, sdid);
+                if (vanc_pkt.size() < pixels_remaining)
+                {
+                    line.insert(line.end(), vanc_pkt.begin(), vanc_pkt.end());
+                    pixels_remaining -= vanc_pkt.size();
+                } else
+                {
+                    pixels_remaining = pixels_per_line;
+                    lines_data.push_back(std::move(line));
+                    line.clear();
+                    line.reserve(pixels_per_line);
+                    line.insert(line.end(), vanc_pkt.begin(), vanc_pkt.end());
+                    pixels_remaining -= vanc_pkt.size();
+                }
+            }
+        }
+        lines_data.push_back(std::move(line));
+
+        for (auto &line_data : lines_data)
+        {
+            lines.push_back(pack_vanc_v210(line_data, width));
+        }
+        return lines;
+    }
+
+}}}

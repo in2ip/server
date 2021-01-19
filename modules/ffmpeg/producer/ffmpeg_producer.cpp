@@ -341,10 +341,10 @@ public:
 
 		if (scte_104_) {
 			auto data = scte_104_.get()->tick();
-			if (!data.empty())
+			if (data)
 			{
 				CASPAR_LOG(debug) << "Got SCTE data";
-				frame.first.ancillary().add(caspar::core::anc_type_scte_104, data);
+				frame.first.ancillary().addData(data);
 			}
 		}
 		return frame;

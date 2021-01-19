@@ -375,7 +375,7 @@ private:
 		fast_forward_integer_frames(integer_next_frame - integer_current_frame);
 
 		last_frame_ = result;
-
+		last_frame_.ancillary().clear();
 		if (sound)
 			return attach_sound(result);
 		else

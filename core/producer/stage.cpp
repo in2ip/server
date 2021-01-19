@@ -140,7 +140,7 @@ public:
 		if(format_desc.field_mode != core::field_mode::progressive)
 		{
 			auto frame2 = frame;
-			frame2.ancillary().ancillary_data.clear();
+			frame2.ancillary().clear();
 			frame2.transform() *= tween.fetch_and_tick(1);
 			frame2.transform().audio_transform.volume = 0.0;
 			frame1 = core::draw_frame::interlace(frame1, frame2, format_desc.field_mode);

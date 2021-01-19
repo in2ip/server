@@ -92,7 +92,7 @@ public:
 						static_cast<double>(format_desc.square_width)
 						/ static_cast<double>(format_desc.square_height));
 
-				caspar::core::ancillary ancillary;
+				ancillary::AncillaryContainer ancillary;
 				for (auto& frame : frames)
 				{
 					frame.second.accept(audio_mixer_);

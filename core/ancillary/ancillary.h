@@ -22,50 +22,68 @@
 #pragma once
 #include "../StdAfx.h"
 
-namespace caspar { namespace core {
+namespace caspar { namespace core { namespace ancillary {
 
-enum ancillary_type {
-    anc_type_scte_104
+enum ancillary_data_type {
+    ancillary_data_none = 0,
+    ancillary_data_type_scte_104 = 1
 };
 
-class ancillary final
+class AncillaryData 
 {
     public:
-        std::list<std::pair<ancillary_type, std::vector<uint32_t>>> ancillary_data;
+        AncillaryData(){};
+        virtual ~AncillaryData(){};
+        virtual std::vector<uint8_t> getData() = 0;
+        virtual ancillary_data_type getType() = 0;
+        //DID, SDID
+        virtual void getVancID(uint8_t& did, uint8_t& sdid) = 0;
+};
 
-        ancillary()
+class AncillaryContainer final
+{
+    std::vector<std::shared_ptr<AncillaryData>> ancillary_data_container;
+    public:
+        AncillaryContainer()
         {
         }
 
-        ancillary(ancillary && other) noexcept
+        AncillaryContainer(AncillaryContainer && other) noexcept
         {
             *this = std::move(other);
         }
 
-        ancillary(const ancillary & other) noexcept
+        AncillaryContainer(const AncillaryContainer & other) noexcept
         {
-            ancillary_data = other.ancillary_data;
+            ancillary_data_container = other.ancillary_data_container;
         }
 
-        void add(ancillary_type type, std::vector<uint32_t>& data)
+        void addData(std::shared_ptr<AncillaryData> data)
         {
-            auto pair = std::make_pair(type, data);
-            ancillary_data.push_back(std::move(pair));
+            ancillary_data_container.push_back(data);
         }
 
-        ancillary& operator=(ancillary&& other) noexcept
+        //Concats all ancillary data into v210 anc lines
+        //exclude: OR ancillary_data_types to exclude
+        std::list<std::vector<uint32_t>> getAncillaryAsLines(uint32_t width, ancillary_data_type exclude = ancillary_data_none) const;
+
+        AncillaryContainer& operator=(AncillaryContainer&& other) noexcept
         {
             if (this != &other)
             {
-                for (auto & item : other.ancillary_data)
+                for (auto & item : other.ancillary_data_container)
                 {
-                    ancillary_data.push_back(std::move(item));
+                    ancillary_data_container.push_back(std::move(item));
                 }
-
-                other.ancillary_data.clear();
+                other.clear();
             }
             return *this;
         }
-};
-}}
 
+        void clear()
+        {
+            ancillary_data_container.clear();
+        }
+};
+
+}}}

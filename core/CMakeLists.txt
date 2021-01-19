@@ -2,6 +2,9 @@ cmake_minimum_required (VERSION 2.6)
 project (core)
 
 set(SOURCES
+		ancillary/ancillary.cpp
+		ancillary/scte/scte.cpp
+
 		consumer/syncto/syncto_consumer.cpp
 
 		consumer/frame_consumer.cpp

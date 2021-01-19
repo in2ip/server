@@ -68,7 +68,7 @@ public:
 	bool operator==(const draw_frame& other) const;
 	bool operator!=(const draw_frame& other) const;
 
-	caspar::core::ancillary& ancillary();
+	caspar::core::ancillary::AncillaryContainer& ancillary();
 	// Properties
 
 	const core::frame_transform&	transform() const;
