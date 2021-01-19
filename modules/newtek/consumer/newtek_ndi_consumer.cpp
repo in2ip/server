@@ -1,6 +1,7 @@
 /*
  * Copyright 2018
- *
+ * Copyright 2019-2021 in2ip B.V.
+ * 
  * This file is part of CasparCG (www.casparcg.com).
  *
  * CasparCG is free software: you can redistribute it and/or modify
@@ -15,9 +16,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with CasparCG. If not, see <http://www.gnu.org/licenses/>.
- *
+ * Author: Gijs Peskens, gijs@in2ip.nl
  * Author: Krzysztof Zegzula, zegzulakrzysztof@gmail.com
  * based on work of Robert Nagy, ronag89@gmail.com
+ * 
  */
 
 #include "../StdAfx.h"
