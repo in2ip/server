@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020 in2ip B.V.
+* Copyright (c) 2021 in2ip B.V.
 *
 * This file is part of CasparCG (www.casparcg.com).
 *
@@ -18,6 +18,7 @@
 *
 * Author: Gijs Peskens <gijs@in2ip.nl>
 */
+
 #pragma once
 
 #include "messages.h"
