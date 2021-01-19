@@ -179,6 +179,8 @@ std::vector<uint32_t> pack_vanc_v210(std::vector<uint16_t>&inbuf, int width)
     std::list<std::vector<uint32_t>> AncillaryContainer::getAncillaryAsLines(uint32_t width, ancillary_data_type exclude) const
     {
         std::list<std::vector<uint32_t>> lines;
+        if (ancillary_data_container.empty())
+            return lines;
         uint32_t pixels_remaining, pixels_per_line;
         if (width > 720)
             pixels_remaining = pixels_per_line = (width / 4) * 6;

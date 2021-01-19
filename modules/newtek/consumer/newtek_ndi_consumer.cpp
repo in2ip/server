@@ -338,7 +338,7 @@ struct newtek_ndi_consumer : public boost::noncopyable
             CASPAR_LOG(debug) << "Adding VANC line to metadata";
             char *base64_vanc = (char*)calloc(Base64encode_len(vanc_line.size() * 4) +1, 1);
             Base64encode(base64_vanc, (const char *)vanc_line.data(), (vanc_line.size() * 4));
-            CASPAR_LOG(debug) << base64_vanc;
+            CASPAR_LOG(trace) << base64_vanc;
             metadata_tree.put("VANC_DATA", base64_vanc);
             free(base64_vanc);
             write_meta = true;

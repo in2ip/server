@@ -50,12 +50,14 @@ namespace caspar { namespace core { namespace ancillary { namespace scte104 {
                        uint32_t event_id,
                        uint16_t unique_program_id,
                        uint16_t pre_roll_time,
+                       uint16_t break_duration,
                        uint8_t avail_num,
                        uint8_t avails_expected,
                        uint8_t auto_return_flag)
                 : splice_type_(type)
                 , event_id_(event_id)
                 , unique_program_id_(unique_program_id)
+                , break_duration_(break_duration)
                 , pre_roll_time_(pre_roll_time)
                 , avail_num_(avail_num)
                 , avails_expected_(avails_expected)

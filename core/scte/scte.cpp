@@ -151,6 +151,7 @@ struct scte_104::impl : boost::noncopyable
                                                                                          , event_id
                                                                                          , unique_program_id
                                                                                          , next_remaining_mark
+                                                                                         , break_duration
                                                                                          , avail_num
                                                                                          , avails_expected
                                                                                          , auto_return_flag);
@@ -175,6 +176,7 @@ struct scte_104::impl : boost::noncopyable
             CASPAR_LOG(debug) << "Splice NULL";
         }
 
+        since_last_splice_cmd.restart();
         return scte104_ancillary;
     }
 
