@@ -47,8 +47,8 @@ public:
 	const core::audio_channel_layout& audio_channel_layout() const;
 
 	const array<std::uint8_t>& image_data(std::size_t index = 0) const;
-	std::vector<std::uint8_t>& atsc_a53_cc();
 	const core::mutable_audio_buffer& audio_data() const;
+	core::ancillary::AncillaryContainer& ancillary();
 
 	array<std::uint8_t>& image_data(std::size_t index = 0);
 	core::mutable_audio_buffer& audio_data();

@@ -19,6 +19,8 @@
 * Author: Robert Nagy, ronag89@gmail.com
 */
 
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 #include "StdAfx.h"
 
 #include "ffmpeg.h"

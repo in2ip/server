@@ -26,7 +26,8 @@ namespace caspar { namespace core { namespace ancillary {
 
 enum ancillary_data_type {
     ancillary_data_none = 0,
-    ancillary_data_type_scte_104 = 1
+    ancillary_data_type_scte_104 = 1,
+    ancillary_data_type_cea708 = 2
 };
 
 class AncillaryData 

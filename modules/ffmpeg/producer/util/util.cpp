@@ -19,6 +19,8 @@
 * Author: Robert Nagy, ronag89@gmail.com
 */
 
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 #include "../../StdAfx.h"
 
 #include "util.h"
@@ -31,6 +33,8 @@
 
 #include <tbb/concurrent_unordered_map.h>
 #include <tbb/concurrent_queue.h>
+
+#include "core/ancillary/cea708/cea708.h"
 
 #include <core/frame/frame_transform.h>
 #include <core/frame/frame_factory.h>
@@ -182,7 +186,9 @@ core::mutable_frame make_frame(const void* tag, const spl::shared_ptr<AVFrame>& 
 		struct AVFrameSideData *atsc_a53_cc = av_frame_get_side_data((const AVFrame *)decoded_frame.get(), AV_FRAME_DATA_A53_CC);
 		if (atsc_a53_cc != NULL)
 		{
-			write.atsc_a53_cc().insert(write.atsc_a53_cc().begin(), atsc_a53_cc->data, (atsc_a53_cc->data+atsc_a53_cc->size));
+			using caspar::core::ancillary::CEA708;
+			std::make_shared<CEA708>(atsc_a53_cc->data, atsc_a53_cc->size, caspar::core::ancillary::atsc53);
+			//write.atsc_a53_cc().insert(write.atsc_a53_cc().begin(), atsc_a53_cc->data, (atsc_a53_cc->data+atsc_a53_cc->size));
 		}
 
 		std::shared_ptr<SwsContext> sws_context;
@@ -236,7 +242,8 @@ core::mutable_frame make_frame(const void* tag, const spl::shared_ptr<AVFrame>& 
 		struct AVFrameSideData *atsc_a53_cc = av_frame_get_side_data((const AVFrame *)decoded_frame.get(), AV_FRAME_DATA_A53_CC);
 		if (atsc_a53_cc != NULL)
 		{
-			write.atsc_a53_cc().insert(write.atsc_a53_cc().begin(), atsc_a53_cc->data, (atsc_a53_cc->data+atsc_a53_cc->size));
+
+			//write.atsc_a53_cc().insert(write.atsc_a53_cc().begin(), atsc_a53_cc->data, (atsc_a53_cc->data+atsc_a53_cc->size));
 		}
 
 		for(int n = 0; n < static_cast<int>(desc.planes.size()); ++n)

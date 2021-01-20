@@ -49,6 +49,8 @@
 #pragma warning(push)
 #pragma warning(disable: 4244)
 
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 extern "C"
 {
 	#define __STDC_CONSTANT_MACROS

@@ -4,7 +4,7 @@ project (core)
 set(SOURCES
 		ancillary/ancillary.cpp
 		ancillary/scte/scte.cpp
-
+		ancillary/cea708/cea708.cpp
 		consumer/syncto/syncto_consumer.cpp
 
 		consumer/frame_consumer.cpp

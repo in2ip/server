@@ -33,10 +33,11 @@ namespace caspar { namespace core { namespace ancillary {
     class CEA708 : public AncillaryData
     {
         public:
-            CEA708(const uint8_t* data, size_t size, cea708_format type);
-            std::vector<uint8_t> getData();
-            void getVancID(uint8_t& did, uint8_t& sdid) { did = 0x61; sdid = 0x01; }
-            ancillary_data_type getType() { return ancillary_data_type_cea708; }
+            CEA708(uint8_t* data, size_t size, cea708_format type);
+            ~CEA708();
+            std::vector<uint8_t> getData()const;
+            void getVancID(uint8_t& did, uint8_t& sdid)const { did = 0x61; sdid = 0x01; }
+            ancillary_data_type getType()const { return ancillary_data_type_cea708; }
         private:
             struct impl;
             spl::unique_ptr<impl> impl_;

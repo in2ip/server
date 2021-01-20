@@ -20,27 +20,29 @@
 */
 
 #include "cea708.h"
-
+#include "hexdump.h"
+#include <iostream>
 namespace caspar { namespace core { namespace ancillary {
 
     struct CEA708::impl : boost::noncopyable
     {
-        impl(const uint8_t* data, size_t size, cea708_format type)
+        impl(uint8_t* data, size_t size, cea708_format type)
         {
-            //parser atsc a53
+           std::cout << Hexdump(data, size) << std::endl;
         }
 
-        impl(const &other)
+        impl(const impl& other)
         {
             //
         }
 
-        std::vector<uint8_t> getData()
+        std::vector<uint8_t> getData()const
         {
             return std::vector<uint8_t>();
         }
     };
 
-    CEA708::CEA708(const uint8_t* data, size_t size, cea708_format type) : impl_(new impl(data, size, type)){}
-    std::vector<uint8_t> CEA708::getData(){ return impl_->getData(); }
+    CEA708::CEA708(uint8_t* data, size_t size, cea708_format type) : impl_(new impl(data, size, type)){}
+    CEA708::~CEA708(){}
+    std::vector<uint8_t> CEA708::getData()const { return impl_->getData(); }
 }}}
