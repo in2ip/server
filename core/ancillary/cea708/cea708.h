@@ -26,6 +26,7 @@
 namespace caspar { namespace core { namespace ancillary {
 
     enum cea708_format {
+        raw_pkts,
         atsc53,
         cdp
     };

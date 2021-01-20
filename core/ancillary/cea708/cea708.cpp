@@ -20,15 +20,48 @@
 */
 
 #include "cea708.h"
-#include "hexdump.h"
-#include <iostream>
 namespace caspar { namespace core { namespace ancillary {
+
+    enum cea708_pkt_type {
+        NTSC_CC_FIELD_1 = 0,
+        NTSC_CC_FIELD_2 = 1,
+        DTVCC_PACKET_DATA = 2,
+        DTVCC_PACKET_START = 3
+    };
+
+    class CEA708PKT
+    {
+        uint8_t data[3] = { 0 };
+        bool cc_valid;
+        cea708_pkt_type type;
+        public:
+            CEA708PKT(uint8_t pkt[])
+            {
+                memcpy(data, pkt, 3);
+                cc_valid = (data[0] >> 2) & 1UL;
+                type = static_cast<cea708_pkt_type>(data[0] & 0x03);
+            }
+    };
 
     struct CEA708::impl : boost::noncopyable
     {
-        impl(uint8_t* data, size_t size, cea708_format type)
+        std::list<CEA708PKT> pkts;
+        impl(uint8_t data[], size_t size, cea708_format type)
         {
-           std::cout << Hexdump(data, size) << std::endl;
+            if (type == raw_pkts)
+            {
+                if ((size % 3) != 0)
+                    CASPAR_THROW_EXCEPTION(user_error() << msg_info(L"input data not mod 3"));
+
+                for (int i = 0; i < size;)
+                {
+                    pkts.emplace_back(CEA708PKT(&data[i]));
+                    i += 3;
+                }
+            } else {
+                CASPAR_THROW_EXCEPTION(user_error() << msg_info(L"CEA input type not implemented"));
+            }
+        
         }
 
         impl(const impl& other)
