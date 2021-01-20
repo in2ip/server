@@ -54,7 +54,8 @@ public:
 	}
 
 	impl(mutable_frame&& frame)
-		: frame_(new const_frame(std::move(frame)))
+		: ancillary(std::move(frame.ancillary()))
+		, frame_(new const_frame(std::move(frame)))
 	{
 	}
 

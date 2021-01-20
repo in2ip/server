@@ -39,6 +39,8 @@ namespace caspar { namespace core { namespace ancillary {
             std::vector<uint8_t> getData()const;
             void getVancID(uint8_t& did, uint8_t& sdid)const { did = 0x61; sdid = 0x01; }
             ancillary_data_type getType()const { return ancillary_data_type_cea708; }
+
+            void appendBack(CEA708& other);
         private:
             struct impl;
             spl::unique_ptr<impl> impl_;

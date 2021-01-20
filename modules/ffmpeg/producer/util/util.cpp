@@ -187,7 +187,7 @@ core::mutable_frame make_frame(const void* tag, const spl::shared_ptr<AVFrame>& 
 		if (atsc_a53_cc != NULL)
 		{
 			using caspar::core::ancillary::CEA708;
-			std::make_shared<CEA708>(atsc_a53_cc->data, atsc_a53_cc->size, caspar::core::ancillary::raw_pkts);
+			write.ancillary().addData(std::make_shared<CEA708>(atsc_a53_cc->data, atsc_a53_cc->size, caspar::core::ancillary::raw_pkts));
 		}
 
 		std::shared_ptr<SwsContext> sws_context;
@@ -242,7 +242,7 @@ core::mutable_frame make_frame(const void* tag, const spl::shared_ptr<AVFrame>& 
 		if (atsc_a53_cc != NULL)
 		{
 			using caspar::core::ancillary::CEA708;
-			std::make_shared<CEA708>(atsc_a53_cc->data, atsc_a53_cc->size, caspar::core::ancillary::raw_pkts);
+			write.ancillary().addData(std::make_shared<CEA708>(atsc_a53_cc->data, atsc_a53_cc->size, caspar::core::ancillary::raw_pkts));
 		}
 
 		for(int n = 0; n < static_cast<int>(desc.planes.size()); ++n)
