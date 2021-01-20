@@ -56,7 +56,7 @@ namespace caspar { namespace core { namespace ancillary {
 
             uint64_t asUint64()
             {
-                return static_cast<uint64_t>(data[0]);
+                return (data[0] << 16 | data[1] << 8 | data[0]);
             }
 
 
@@ -116,6 +116,7 @@ namespace caspar { namespace core { namespace ancillary {
         std::vector<uint8_t> getData()const
         {
             std::vector<uint8_t> out;
+            out.reserve(255);
             Bitstream bs =Bitstream(out);
             bs.write_bytes_msb(0x9669, 2);//cdp_id
             bs.write_byte(0);//cdp_data_count, set it later

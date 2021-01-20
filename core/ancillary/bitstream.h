@@ -51,9 +51,9 @@ public:
             scratch_used = 0;
         }
     }
-    void inline write_bits(uint64_t bits, uint64_t bitcount)
+    void inline write_bits(uint64_t bits, uint32_t bitcount)
     {
-        for (uint64_t i = (bitcount -1); i >= 0; i--)
+        for (int64_t i = (bitcount -1); i >= 0; i--)
         {
             write_bit(bits >> i);
         }
